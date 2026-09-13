@@ -1,0 +1,379 @@
+/* ------- Общие настройки ------- */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #f9faf9;
+  color: #1f1e0a;
+  font-family: "Century Gothic", "Cambria", serif;
+  font-size: 16px;
+}
+
+header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  height: 52px;
+  background-color: #f9faf9;
+  border-bottom: 2px solid #806edc;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+header h1 {
+  font-size: 1.4rem;
+  margin: 0;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+article {
+  margin: 80px 20px 40px 20px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+footer {
+  text-align: center;
+  padding: 14px;
+  font-size: 13px;
+  border-top: 1px solid #806edc;
+  background-color: #f9faf9;
+  margin-top: 40px;
+}
+
+/* ------- Общая настройка блоков ------- */
+.block {
+  background: rgb(255, 255, 255);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 22px 26px;
+  margin-bottom: 28px;
+  transition: all 0.2s;
+}
+
+.block h3 {
+  margin-top: 0;
+  margin-bottom: 0;
+  font-weight: 500;
+  color: #2c3e2f;
+  font-size: 1.3rem;
+}
+
+/* ------- Формула ------- */
+.formula-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 15px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.formula-group input {
+  font-family: "Century Gothic", "Cambria", serif;
+  font-size: 20px;
+}
+
+.formula-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 1rem;
+}
+
+.formula-input {
+  flex: 1;
+  min-width: 250px;
+  padding: 8px 10px;
+  font-size: 20px !important;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fcfffd;
+  transition: 0.2s;
+}
+
+/* ------- Коэффициенты ------- */
+.N-group label,
+.Wt-group label {
+  font-size: 20px;
+  font-weight: normal;
+}
+
+.N-group,
+.Wt-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.N-group input,
+.Wt-group input,
+#x0-input {
+  width: 80px;
+  padding: 8px 10px;
+  font-size: 20px !important;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fcfffd;
+  transition: 0.2s;
+}
+
+/* ------- Настройка панели объединения коэффициентов и графика ------- */
+.general-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 24px;
+  width: 100%;
+  margin-top: 20px;
+  box-sizing: border-box;
+}
+
+/* ------- Область под графиком ------- */
+
+.button-group {
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 12px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.calc-btn {
+  background: #567ac4;
+  border: none;
+  color: white;
+  padding: 10px 28px;
+  border-radius: 40px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: bold;
+  margin-top: 5px;
+  transition: 0.2s;
+}
+
+.calc-btn:hover {
+  background: #2d5ec0;
+  transform: scale(0.98);
+}
+
+.calc-btn:active {
+  background: #2257c1;
+  transform: scale(0.95);
+}
+
+#x0-group {
+  margin-right: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+#x0-group label {
+  font-size: 20px;
+  font-weight: normal;
+}
+
+/* ------- Панель коэффициентов модели ------- */
+.coeff-panel {
+  width: 34%;
+  min-width: 280px;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  background: #fcfffd;
+  border-radius: 8px;
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+
+.coeff-panel h4 {
+  width: 100%;
+  margin-top: 0;
+  margin-bottom: 6px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+/* ------- Таблица коэффициентов модели------- */
+.coeff-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.coeff-table th {
+  padding: 5px 2px;
+  border-bottom: 1px solid #ddd;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.coeff-table td {
+  padding: 5px 2px;
+  border-bottom: 1px solid #ddd;
+  text-align: center;
+  font-size: 16px;
+}
+
+.coeff-table th {
+  font-weight: normal;
+  background-color: #f0f2f0;
+}
+
+.coeff-table input {
+  width: 100%;
+  max-width: 60px;
+  padding: 8px 0px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  text-align: center;
+  transition: 0.2s;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+/* ------- График ------- */
+.graph-panel {
+  width: calc(66% - 24px);
+  min-width: 300px;
+  box-sizing: border-box;
+}
+
+.graph-panel h3 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-weight: 500;
+  font-size: 1.3rem;
+}
+
+.graf {
+  width: 100% !important;
+  height: 400px;
+  margin-top: 0px;
+  display: block;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ------- Блоки расчета ------- */
+textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: #fcfffd;
+  resize: vertical;
+  transition: 0.2s;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+#direct-content {
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  padding: 5px;
+  padding-top: 3px;
+}
+
+/* ------- Стили для тумблеров -------*/
+.toggle-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.toggle-header h3 {
+  margin: 0;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 26px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.3s;
+  border-radius: 34px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: #567ac4;
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(26px);
+}
+
+/* ------- Фокусировка -------*/
+body :focus {
+  border-color: #6891bc;
+  outline: none;
+}
+
+.coeff-table :focus {
+  border-color: #6891bc;
+  outline: none;
+}
+
+#x0-group input:focus {
+  border-color: #6891bc;
+  outline: none;
+}
+
+/* ------- Скрытие элементов ------- */
+.hidden {
+  display: none !important;
+}
+
+/* ------- Настройка input -------*/
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
