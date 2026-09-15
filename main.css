@@ -49,7 +49,7 @@ footer {
   margin-top: 40px;
 }
 
-/* ------- Общая блоков ------- */
+/* ------- Общая настройка блоков ------- */
 .block {
   background: rgb(255, 255, 255);
   border-radius: 8px;
@@ -186,8 +186,8 @@ footer {
 /* ------- Панель коэффициентов модели ------- */
 .coeff-panel {
   display: flex;
-  justify-content: center; /* по горизонтали */
-  align-items: center; /* по вертикали */
+  justify-content: center;
+  align-items: center;
   width: 34%;
   min-width: 280px;
   box-sizing: border-box;
