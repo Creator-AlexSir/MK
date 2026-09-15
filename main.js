@@ -531,10 +531,14 @@ if (nInput) {
   nInput.addEventListener("input", function () {
     N = parseInt(this.value) || 20;
     recalculateAndPlot();
+    onGenerateDirect();
   });
 }
 if (wtCoeffInput) {
-  wtCoeffInput.addEventListener("input", () => recalculateAndPlot());
+  wtCoeffInput.addEventListener(
+    "input",
+    () => (recalculateAndPlot(), onGenerateDirect()),
+  );
 }
 if (tbody) {
   tbody.addEventListener("input", onGenerateDirect);
@@ -546,8 +550,8 @@ if (yDataInput) {
 if (x0Input) {
   x0Input.addEventListener("input", function () {
     x0Value = parseFloat(this.value) || 0;
-
     recalculateAndPlot();
+    onGenerateDirect();
   });
 }
 
