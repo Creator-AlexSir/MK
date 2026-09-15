@@ -1,10 +1,7 @@
 // ==================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==================
-let currentMode = "mnk";
 let currentFormulaRaw = "";
-let currentFormulaDisplay = "";
 let currentCoeffIndices = [];
 let xValues = [];
-let originalData = [];
 let N = 20;
 let x0Value = 0;
 
@@ -24,11 +21,12 @@ function getNormalRandom() {
 const formulaInput = document.getElementById("formula");
 const nInput = document.getElementById("N");
 const wtCoeffInput = document.getElementById("Wt");
-const generateData = document.getElementById("generate-btn");
+const tbody = document.getElementById("coeffs-table-body");
 const yDataInput = document.getElementById("y-data");
 const generatedDataOutput = document.getElementById("generated-data-output");
 const x0Group = document.getElementById("x0-group");
 const x0Input = document.getElementById("x0-input");
+const copy_btn = document.getElementById("copy_1");
 
 // Тумблеры
 const toggleData = document.getElementById("toggle-data");
@@ -314,14 +312,13 @@ function estimateCoefficientsFromData() {
   }
 
   let rawData = yDataInput.value;
+
   if (!rawData.trim()) {
-    if (xValues && xValues.length > 0) {
-      rawData = xValues.join(", ");
-      yDataInput.value = rawData;
-    } else {
-      alert("Введите числовые значения или сначала сгенерируйте данные");
-      return;
-    }
+    estimatedCoeffs = {};
+    window.lsmValues = [];
+    renderCoeffPanel();
+    plotGraph();
+    return;
   }
 
   let ySeries = rawData
@@ -330,11 +327,13 @@ function estimateCoefficientsFromData() {
     .filter((v) => !isNaN(v));
 
   if (ySeries.length < 3) {
-    alert("Введите хотя бы 3 числовых значения");
+    estimatedCoeffs = {};
+    window.lsmValues = [];
+    renderCoeffPanel();
+    plotGraph();
     return;
   }
 
-  originalData = [...ySeries];
   N = ySeries.length;
   if (nInput) nInput.value = N;
 
@@ -450,14 +449,6 @@ function onGenerateDirect() {
       .map((v) => v.toFixed(4))
       .join(", ");
   }
-  if (yDataInput && generated.length > 0) {
-    yDataInput.value = generated.map((v) => v.toFixed(4)).join(", ");
-  }
-
-  if (yDataInput) {
-    yDataInput.dispatchEvent(new Event("input"));
-  }
-
   plotGraph();
 }
 
@@ -474,8 +465,6 @@ function onFormulaChange() {
   if (formulaInput.value !== fullDisplayValue && rawValue !== "") {
     formulaInput.value = fullDisplayValue;
   }
-
-  currentFormulaDisplay = fullDisplayValue;
   currentFormulaRaw = rawValue;
 
   let newIndices = extractIndicesFromRaw(rawValue);
@@ -537,6 +526,7 @@ function initToggles() {
 
 // ==================== ОБРАБОТЧИКИ СОБЫТИЙ ====================
 formulaInput.addEventListener("input", onFormulaChange);
+formulaInput.addEventListener("input", onGenerateDirect);
 if (nInput) {
   nInput.addEventListener("input", function () {
     N = parseInt(this.value) || 20;
@@ -546,8 +536,8 @@ if (nInput) {
 if (wtCoeffInput) {
   wtCoeffInput.addEventListener("input", () => recalculateAndPlot());
 }
-if (generateData) {
-  generateData.addEventListener("click", onGenerateDirect);
+if (tbody) {
+  tbody.addEventListener("input", onGenerateDirect);
 }
 if (yDataInput) {
   yDataInput.addEventListener("input", estimateCoefficientsFromData);
@@ -558,6 +548,12 @@ if (x0Input) {
     x0Value = parseFloat(this.value) || 0;
 
     recalculateAndPlot();
+  });
+}
+
+if (copy_btn) {
+  copy_btn.addEventListener("click", function () {
+    navigator.clipboard.writeText(generatedDataOutput.textContent || "");
   });
 }
 

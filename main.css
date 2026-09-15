@@ -42,19 +42,19 @@ article {
 
 footer {
   text-align: center;
-  padding: 14px;
+  padding: 5px;
   font-size: 13px;
   border-top: 1px solid #806edc;
   background-color: #f9faf9;
   margin-top: 40px;
 }
 
-/* ------- Общая настройка блоков ------- */
+/* ------- Общая блоков ------- */
 .block {
   background: rgb(255, 255, 255);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  padding: 22px 26px;
+  padding: 15px 26px;
   margin-bottom: 28px;
   transition: all 0.2s;
 }
@@ -185,6 +185,9 @@ footer {
 
 /* ------- Панель коэффициентов модели ------- */
 .coeff-panel {
+  display: flex;
+  justify-content: center; /* по горизонтали */
+  align-items: center; /* по вертикали */
   width: 34%;
   min-width: 280px;
   box-sizing: border-box;
@@ -289,6 +292,27 @@ textarea {
   padding-top: 3px;
 }
 
+.copy_button {
+  background: #f0f2f0;
+  border: none;
+  color: #1f1e0a;
+  padding: 5px 14px;
+  border-radius: 15px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  margin-top: 10px;
+  transition: 0.2s;
+}
+
+.copy_button:hover {
+  background: #e6e7e6;
+  transform: scale(0.98);
+}
+
+.copy_button:active {
+  background: rgb(217, 218, 217);
+  transform: scale(0.95);
+}
 /* ------- Стили для тумблеров -------*/
 .toggle-header {
   display: flex;
