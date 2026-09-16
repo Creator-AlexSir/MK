@@ -275,6 +275,11 @@ function recalculateAndPlot() {
     for (let idx of currentCoeffIndices) tempCoeffs[`a${idx}`] = 0;
     xValues = calculateModel(tempCoeffs, N);
   }
+  if (estimatedCoeffs && Object.keys(estimatedCoeffs).length > 0) {
+    window.lsmValues = calculateModel(estimatedCoeffs, N);
+  } else {
+    window.lsmValues = [];
+  }
   plotGraph();
 }
 
@@ -315,9 +320,8 @@ function estimateCoefficientsFromData() {
 
   if (!rawData.trim()) {
     estimatedCoeffs = {};
-    window.lsmValues = [];
     renderCoeffPanel();
-    plotGraph();
+    recalculateAndPlot();
     return;
   }
 
@@ -328,14 +332,10 @@ function estimateCoefficientsFromData() {
 
   if (ySeries.length < 3) {
     estimatedCoeffs = {};
-    window.lsmValues = [];
     renderCoeffPanel();
-    plotGraph();
+    recalculateAndPlot();
     return;
   }
-
-  N = ySeries.length;
-  if (nInput) nInput.value = N;
 
   const k = currentCoeffIndices.length;
   const n = ySeries.length;
@@ -396,7 +396,6 @@ function estimateCoefficientsFromData() {
   }
 
   renderCoeffPanel();
-  window.lsmValues = calculateModel(estimatedCoeffs, N);
   recalculateAndPlot();
 }
 
@@ -405,7 +404,7 @@ function plotGraph() {
   let datasets = [];
   if (xValues && xValues.length > 0) {
     datasets.push({
-      label: "Исходная модель",
+      label: "Теоретическая модель",
       data: xValues.map((v, i) => [i, v]),
       color: "#806edc",
       lines: { show: true, lineWidth: 2 },
