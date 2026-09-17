@@ -379,3 +379,84 @@ input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
 }
+
+/* ===== Кнопки переноса коэффициентов ===== */
+.transfer-btn, .reset-btn {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  transition: 0.2s;
+}
+
+.transfer-btn {
+  background: #806edc;
+  color: #fff;
+}
+.transfer-btn:hover { background: #6a5ac0; }
+.transfer-btn:active { transform: scale(0.98); }
+
+.reset-btn {
+  background: #f0f2f0;
+  color: #555;
+}
+.reset-btn:hover { background: #e0e2e0; }
+
+/* ===== Таблица метрик ===== */
+.metrics-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 0.9rem;
+}
+.metrics-table th {
+  background: #f0f2f0;
+  font-weight: normal;
+  padding: 8px 6px;
+  border-bottom: 1px solid #ddd;
+  text-align: center;
+}
+.metrics-table td {
+  padding: 8px 6px;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+}
+.metrics-table tr.best-row {
+  background: #eaf7ea;
+  font-weight: 600;
+}
+
+/* ===== Подпись к общему графику ===== */
+.legend-note {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: #666;
+  text-align: center;
+}
+
+/* ===== Блок модели ===== */
+.model-block {
+  border-left: 4px solid #806edc;
+}
+.model-block[data-model="2"] {
+  border-left-color: #ff9800;
+}
+/* ===== Подпись к метрикам ===== */
+.metrics-note {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #f7f9f7;
+  border-left: 3px solid #806edc;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  color: #555;
+  line-height: 1.6;
+}
+.metrics-note strong {
+  color: #1f1e0a;
+}
