@@ -66,9 +66,10 @@
             <table class="coeff-table">
               <thead>
                 <tr>
-                  <th>Коэффициент</th>
-                  <th>Теоретический</th>
+                  <th>Коэфф.</th>
+                  <th>Теор.</th>
                   <th>Расчетный</th>
+                  <th>Остаток</th>
                 </tr>
               </thead>
               <tbody id="coeffs-table-body"></tbody>
@@ -95,6 +96,28 @@
                     if (parseFloat(this.value) > 90000) this.value = 90000;
                   "
                 />
+              </div>
+              <!-- Блок метрик качества -->
+              <div class="metrics-block">
+                <h4>Качество аппроксимации</h4>
+                <table class="metrics-table">
+                  <thead>
+                    <tr>
+                      <th>Метрика</th>
+                      <th>Значение</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Средняя абсолютная ошибка</td>
+                      <td id="mae-output">—</td>
+                    </tr>
+                    <tr>
+                      <td>Среднеквадратичная ошибка</td>
+                      <td id="rmse-output">—</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

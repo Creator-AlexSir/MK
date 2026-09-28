@@ -159,7 +159,7 @@ function renderCoeffPanel() {
 
   if (!currentCoeffIndices || currentCoeffIndices.length === 0) {
     container.innerHTML =
-      '<tr><td colspan="3" style="text-align:center; color:#aaa;">— нет коэффициентов —</td></tr>';
+      '<tr><td colspan="4" style="text-align:center; color:#aaa;">— нет коэффициентов —</td></tr>';
     return;
   }
 
@@ -200,6 +200,17 @@ function renderCoeffPanel() {
     const tdEstimated = document.createElement("td");
     tdEstimated.textContent = estimatedVal;
     tr.appendChild(tdEstimated);
+    const tdDeviation = document.createElement("td");
+    if (estimatedCoeffs[key] !== undefined && theoryCoeffs[key] !== undefined) {
+      let deviation = theoryCoeffs[key] - estimatedCoeffs[key];
+      if (Math.abs(deviation) < 0.0001) {
+        deviation = 0;
+      }
+      tdDeviation.textContent = deviation.toFixed(4);
+    } else {
+      tdDeviation.textContent = "—";
+    }
+    tr.appendChild(tdDeviation);
     container.appendChild(tr);
   }
 }
@@ -281,6 +292,7 @@ function recalculateAndPlot() {
     window.lsmValues = [];
   }
   plotGraph();
+  updateMetricsDisplay();
 }
 
 // ==================== МАТЕМАТИЧЕСКИЙ АППАРАТ (МНК) ============
@@ -397,6 +409,7 @@ function estimateCoefficientsFromData() {
 
   renderCoeffPanel();
   recalculateAndPlot();
+  updateMetricsDisplay();
 }
 
 // ==================== ОТРИСОВКА ГРАФИКОВ ====================
@@ -565,6 +578,46 @@ document.addEventListener("wheel", function (event) {
     document.activeElement.blur();
   }
 });
+
+// ==================== РАСЧЁТ ОСТАТКОВ И МЕТРИК ============
+function calculateResiduals() {
+  if (!xValues || xValues.length === 0) return null;
+  if (!window.lsmValues || window.lsmValues.length === 0) return null;
+  if (xValues.length !== window.lsmValues.length) return null;
+
+  let residuals = [];
+  let sumAbs = 0;
+  let sumSq = 0;
+
+  for (let i = 0; i < xValues.length; i++) {
+    let e = xValues[i] - window.lsmValues[i];
+    residuals.push(e);
+    sumAbs += Math.abs(e);
+    sumSq += e * e;
+  }
+
+  let n = residuals.length;
+  let mae = sumAbs / n;
+  let rmse = Math.sqrt(sumSq / n);
+
+  return { residuals, mae, rmse };
+}
+
+function updateMetricsDisplay() {
+  const maeEl = document.getElementById("mae-output");
+  const rmseEl = document.getElementById("rmse-output");
+  if (!maeEl || !rmseEl) return;
+
+  const result = calculateResiduals();
+  if (!result) {
+    maeEl.textContent = "—";
+    rmseEl.textContent = "—";
+    return;
+  }
+
+  maeEl.textContent = result.mae.toFixed(4);
+  rmseEl.textContent = result.rmse.toFixed(4);
+}
 
 // ==================== ИНИЦИАЛИЗАЦИЯ ====================
 window.addEventListener("DOMContentLoaded", () => {
