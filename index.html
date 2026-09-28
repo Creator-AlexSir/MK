@@ -55,7 +55,7 @@
 
         <!-- Панель объединения коэффициентов и графика -->
         <div class="general-panel">
-          <!-- Панель коэффициентов модели -->
+          <!-- Панель коэффициентов модели  -->
           <div class="coeff-panel">
             <h4>Коэффициенты модели 1</h4>
             <table class="coeff-table">
@@ -92,7 +92,9 @@
                   value="0"
                   step="0.1"
                   max="90000"
-                  oninput="if (parseFloat(this.value) > 90000) this.value = 90000;"
+                  oninput="
+                    if (parseFloat(this.value) > 90000) this.value = 90000;
+                  "
                 />
               </div>
             </div>
@@ -143,7 +145,9 @@
                 value="1"
                 step="0.1"
                 max="90000"
-                oninput="if (parseFloat(this.value) > 90000) this.value = 90000;"
+                oninput="
+                  if (parseFloat(this.value) > 90000) this.value = 90000;
+                "
               />
             </div>
           </div>
@@ -187,7 +191,9 @@
                     value="0"
                     step="0.1"
                     max="90000"
-                    oninput="if (parseFloat(this.value) > 90000) this.value = 90000;"
+                    oninput="
+                      if (parseFloat(this.value) > 90000) this.value = 90000;
+                    "
                   />
                 </div>
               </div>
@@ -208,9 +214,10 @@
         <div id="compare-content">
           <div id="graf-compare" class="graf" style="height: 420px"></div>
           <div class="legend-note">
-            ● эмпирика &nbsp;&nbsp;|&nbsp;&nbsp; ── модель 1 (теор.) &nbsp;&nbsp;|&nbsp;&nbsp;
-            ┄┄ модель 1 (МНК) &nbsp;&nbsp;|&nbsp;&nbsp; ── модель 2 (теор.) &nbsp;&nbsp;|&nbsp;&nbsp;
-            ┄┄ модель 2 (МНК)
+            ● эмпирика &nbsp;&nbsp;|&nbsp;&nbsp; ── модель 1 (теор.)
+            &nbsp;&nbsp;|&nbsp;&nbsp; ┄┄ модель 1 (МНК)
+            &nbsp;&nbsp;|&nbsp;&nbsp; ── модель 2 (теор.)
+            &nbsp;&nbsp;|&nbsp;&nbsp; ┄┄ модель 2 (МНК)
           </div>
         </div>
       </div>
@@ -230,10 +237,18 @@
               <tr>
                 <th>Модель</th>
                 <th>Тип</th>
-                <th title="Mean Squared Error — среднеквадратичная ошибка">MSE</th>
-                <th title="Mean Absolute Error — средняя абсолютная ошибка">MAE</th>
+                <th title="Mean Squared Error — среднеквадратичная ошибка">
+                  MSE
+                </th>
+                <th title="Mean Absolute Error — средняя абсолютная ошибка">
+                  MAE
+                </th>
                 <th title="Коэффициент детерминации (ближе к 1 = лучше)">R²</th>
-                <th title="Mean Absolute Percentage Error — средняя абсолютная процентная ошибка">MAPE, %</th>
+                <th
+                  title="Mean Absolute Percentage Error — средняя абсолютная процентная ошибка"
+                >
+                  MAPE, %
+                </th>
                 <th title="Лучшая модель по R²">Лучшая</th>
               </tr>
             </thead>
@@ -246,10 +261,12 @@
             </tbody>
           </table>
           <div class="metrics-note">
-            <strong>MSE</strong> — среднеквадратичная ошибка (меньше = лучше) &nbsp;|&nbsp;
-            <strong>MAE</strong> — средняя абсолютная ошибка (меньше = лучше) &nbsp;|&nbsp;
-            <strong>R²</strong> — коэффициент детерминации (ближе к 1 = лучше) &nbsp;|&nbsp;
-            <strong>MAPE</strong> — средняя абсолютная процентная ошибка (меньше = лучше)
+            <strong>MSE</strong> — среднеквадратичная ошибка (меньше = лучше)
+            &nbsp;|&nbsp; <strong>MAE</strong> — средняя абсолютная ошибка
+            (меньше = лучше) &nbsp;|&nbsp; <strong>R²</strong> — коэффициент
+            детерминации (ближе к 1 = лучше) &nbsp;|&nbsp;
+            <strong>MAPE</strong> — средняя абсолютная процентная ошибка (меньше
+            = лучше)
           </div>
         </div>
       </div>
