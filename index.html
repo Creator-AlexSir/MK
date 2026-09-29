@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Стохастическая модель</title>
+    <title>Стохастическая модель — сравнение</title>
     <link href="main.css" rel="stylesheet" />
   </head>
   <body>
@@ -11,26 +11,39 @@
       <h1>Стохастическая модель</h1>
     </header>
 
-    <!-- Уравнение -->
     <article>
+      <!-- ==================== БЛОК 1: ПАРАМЕТРЫ ==================== -->
       <div class="block">
-        <h3>Уравнение модели</h3>
+        <h3>Уравнения моделей</h3>
 
         <div class="formula-group">
+          <label for="formula1">Модель 1:</label>
           <input
             type="text"
-            id="formula"
+            id="formula1"
             class="formula-input"
-            placeholder="Введите формулу"
             list="models"
           />
-          <datalist id="models">
-            <option value="x[t] = a0 + a1*t + a2*t^2"></option>
-            <option value="x[t] = a0 + a1*t^2"></option>
-            <option value="x[t] = a0 + a1 * sqrt(t)"></option>
-            <option value="x[t] = a0 + a1 * x[t-1] + a2 * x[t-2]"></option>
-          </datalist>
-          <!-- Коэффициент N -->
+        </div>
+
+        <div class="formula-group">
+          <label for="formula2">Модель 2:</label>
+          <input
+            type="text"
+            id="formula2"
+            class="formula-input"
+            list="models"
+          />
+        </div>
+
+        <datalist id="models">
+          <option value="x[t] = a0 + a1*t + a2*t^2"></option>
+          <option value="x[t] = a0 + a1*t^2"></option>
+          <option value="x[t] = a0 + a1 * sqrt(t)"></option>
+          <option value="x[t] = a0 + a1 * x[t-1] + a2 * x[t-2]"></option>
+        </datalist>
+
+        <div class="params-group">
           <div class="N-group">
             <label for="N">N:</label>
             <input
@@ -42,8 +55,6 @@
               oninput="if (parseFloat(this.value) > 1000) this.value = 1000;"
             />
           </div>
-
-          <!-- Коэффициент Wt -->
           <div class="Wt-group">
             <label for="Wt">Wₜ:</label>
             <input
@@ -56,108 +67,180 @@
               oninput="if (parseFloat(this.value) > 90000) this.value = 90000;"
             />
           </div>
+          <div id="x0-group" class="hidden">
+            <label for="x0-input">X₀:</label>
+            <input
+              type="number"
+              id="x0-input"
+              class="N-input"
+              value="0"
+              step="0.1"
+              max="90000"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== БЛОК 2: МОДЕЛЬ 1 ==================== -->
+      <div class="block">
+        <div class="toggle-header">
+          <h3>Модель 1</h3>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-model1" checked />
+            <span class="toggle-slider"></span>
+          </label>
         </div>
 
-        <!-- Панель объединения коэффициентов и графика -->
-        <div class="general-panel">
-          <!-- Панель коэффициентов модели -->
-          <div class="coeff-panel">
-            <h4>Коэффициенты модели</h4>
-            <table class="coeff-table">
-              <thead>
-                <tr>
-                  <th>Коэфф.</th>
-                  <th>Теор.</th>
-                  <th>Расчетный</th>
-                  <th>Остаток</th>
-                </tr>
-              </thead>
-              <tbody id="coeffs-table-body"></tbody>
-            </table>
-          </div>
+        <div id="model1-content">
+          <div class="general-panel">
+            <div class="coeff-panel">
+              <h4>Коэффициенты Модели 1</h4>
+              <table class="coeff-table">
+                <thead>
+                  <tr>
+                    <th>Коэфф.</th>
+                    <th>Теор.</th>
+                    <th>Расчетный</th>
+                    <th>Остаток</th>
+                  </tr>
+                </thead>
+                <tbody id="coeffs-table-body-1"></tbody>
+              </table>
+            </div>
 
-          <!-- График -->
-          <div class="graph-panel">
-            <h3>График модели</h3>
-            <div id="graf" class="graf"></div>
-
-            <!-- Область под графиком -->
-            <div class="button-group">
-              <div id="x0-group" class="hidden">
-                <label for="x0-input">X₀:</label>
-                <input
-                  type="number"
-                  id="x0-input"
-                  class="N-input"
-                  value="0"
-                  step="0.1"
-                  max="90000"
-                  oninput="
-                    if (parseFloat(this.value) > 90000) this.value = 90000;
-                  "
-                />
-              </div>
-              <!-- Блок метрик качества -->
-              <div class="metrics-block">
-                <h4>Точность модели</h4>
-                <table class="metrics-table">
-                  <thead>
-                    <tr>
-                      <th>Метрика</th>
-                      <th>Значение</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>Средняя абсолютная ошибка</td>
-                      <td id="mae-output">—</td>
-                    </tr>
-                    <tr>
-                      <td>Среднеквадратичная ошибка</td>
-                      <td id="rmse-output">—</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+            <div class="graph-panel">
+              <h3>График Модели 1</h3>
+              <div id="graf-1" class="graf"></div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Блок расчета данных -->
-      <div id="direct-block" class="block">
+      <!-- ==================== БЛОК 3: МОДЕЛЬ 2 ==================== -->
+      <div class="block">
         <div class="toggle-header">
-          <h3>Расчитанные по коэффициентам данные</h3>
+          <h3>Модель 2</h3>
           <label class="toggle-switch">
-            <input type="checkbox" id="toggle-direct" checked />
+            <input type="checkbox" id="toggle-model2" checked />
             <span class="toggle-slider"></span>
           </label>
         </div>
-        <div id="direct-content">
-          <div
-            id="generated-data-output"
-            class="matrix-preview"
-            style="margin-top: 14px"
-          ></div>
+
+        <div id="model2-content">
+          <div class="general-panel">
+            <div class="coeff-panel">
+              <h4>Коэффициенты Модели 2</h4>
+              <table class="coeff-table">
+                <thead>
+                  <tr>
+                    <th>Коэфф.</th>
+                    <th>Теор.</th>
+                    <th>Расчетный</th>
+                    <th>Остаток</th>
+                  </tr>
+                </thead>
+                <tbody id="coeffs-table-body-2"></tbody>
+              </table>
+            </div>
+
+            <div class="graph-panel">
+              <h3>График Модели 2</h3>
+              <div id="graf-2" class="graf"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== БЛОК 4: СРАВНЕНИЕ ==================== -->
+      <div class="block">
+        <div class="toggle-header">
+          <h3>Сравнение моделей</h3>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-compare" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div id="compare-content">
+          <div id="graf" class="graf"></div>
+        </div>
+      </div>
+
+      <!-- ==================== БЛОК 5: ТОЧНОСТЬ ==================== -->
+      <div class="block">
+        <div class="toggle-header">
+          <h3>Точность моделей</h3>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-metrics" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div id="metrics-content">
+          <table class="metrics-table">
+            <thead>
+              <tr>
+                <th>Метрика</th>
+                <th>Модель 1</th>
+                <th>Модель 2</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Средняя абсолютная ошибка</td>
+                <td id="mae-output-1">—</td>
+                <td id="mae-output-2">—</td>
+              </tr>
+              <tr>
+                <td>Среднеквадратичная ошибка</td>
+                <td id="rmse-output-1">—</td>
+                <td id="rmse-output-2">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ==================== БЛОК 6: РАСЧИТАННЫЕ ДАННЫЕ М1 ==================== -->
+      <div class="block">
+        <div class="toggle-header">
+          <h3>Расчитанные данные Модели 1</h3>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-data1" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div id="data1-content">
+          <div id="generated-data-output-1" class="matrix-preview"></div>
           <button class="copy_button" id="copy_1">Копировать</button>
         </div>
       </div>
 
-      <!-- Блок расчета коэффициентов -->
-      <div id="data-block" class="block">
+      <!-- ==================== БЛОК 7: РАСЧИТАННЫЕ ДАННЫЕ М2 ==================== -->
+      <div class="block">
         <div class="toggle-header">
-          <h3>Данные для расчета коэффициентов (Введите минимум 3 значения)</h3>
+          <h3>Расчитанные данные Модели 2</h3>
           <label class="toggle-switch">
-            <input type="checkbox" id="toggle-data" checked />
+            <input type="checkbox" id="toggle-data2" checked />
             <span class="toggle-slider"></span>
           </label>
         </div>
-        <div id="data-content">
-          <textarea
-            id="y-data"
-            rows="3"
-            placeholder="Введите числа через пробел, запятую или с новой строки"
-          ></textarea>
+        <div id="data2-content">
+          <div id="generated-data-output-2" class="matrix-preview"></div>
+          <button class="copy_button" id="copy_2">Копировать</button>
+        </div>
+      </div>
+
+      <!-- ==================== БЛОК 8: ОБЩИЕ ДАННЫЕ ==================== -->
+      <div class="block">
+        <div class="toggle-header">
+          <h3>Данные для расчета коэффициентов (Введите минимум 3 значения)</h3>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggle-y-data" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div id="y-data-content">
+          <textarea id="y-data" rows="3"></textarea>
         </div>
       </div>
     </article>

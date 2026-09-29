@@ -61,17 +61,17 @@ footer {
 
 .block h3 {
   margin-top: 0;
-  margin-bottom: 0;
+  margin-bottom: 14px;
   font-weight: 500;
   color: #2c3e2f;
   font-size: 1.3rem;
 }
 
-/* ------- Формула ------- */
+/* ------- Формулы ------- */
 .formula-group {
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   gap: 15px;
   width: 100%;
   flex-wrap: wrap;
@@ -84,9 +84,10 @@ footer {
 
 .formula-group label {
   display: block;
-  font-weight: 600;
-  margin-bottom: 8px;
+
+  margin-bottom: 0;
   font-size: 1rem;
+  min-width: 90px;
 }
 
 .formula-input {
@@ -100,15 +101,25 @@ footer {
   transition: 0.2s;
 }
 
-/* ------- Коэффициенты ------- */
+/* ------- Параметры N, Wt, X0 ------- */
+.params-group {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
 .N-group label,
-.Wt-group label {
+.Wt-group label,
+#x0-group label {
   font-size: 20px;
   font-weight: normal;
 }
 
 .N-group,
-.Wt-group {
+.Wt-group,
+#x0-group {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -126,90 +137,32 @@ footer {
   transition: 0.2s;
 }
 
-/* ------- Настройка панели объединения коэффициентов и графика ------- */
+/* ------- Панель коэффициентов и графика ------- */
 .general-panel {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   gap: 24px;
   width: 100%;
-  margin-top: 20px;
   box-sizing: border-box;
 }
 
-/* ------- Область под графиком ------- */
-
-.button-group {
-  display: flex !important;
-  justify-content: flex-end !important;
-  align-items: flex-start;
-  gap: 12px;
-  width: 100%;
-  margin-top: 10px;
-}
-
-#x0-group {
-  margin-right: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 5px;
-}
-
-#x0-group label {
-  font-size: 20px;
-  font-weight: normal;
-}
-
-/* ------- Блок метрик качества ------- */
-.metrics-block {
-  margin: 20px 0 0 auto;
-  margin-top: 20px;
-  padding: 12px;
-  background: #fcfffd;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+/* ------- Левая колонка с двумя таблицами ------- */
+.coeff-column {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  width: 60%;
+  gap: 16px;
+  width: 40%;
+  min-width: 300px;
 }
 
-.metrics-block h4 {
-  margin: 0 0 10px 0;
-  font-weight: 500;
-  font-size: 1.1rem;
-  text-align: center;
-}
-
-.metrics-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.metrics-table th,
-.metrics-table td {
-  padding: 6px 10px;
-  border-bottom: 1px solid #ddd;
-  text-align: center;
-  font-size: 16px;
-}
-
-.metrics-table th {
-  font-weight: normal;
-  background-color: #f0f2f0;
-}
 /* ------- Панель коэффициентов модели ------- */
 .coeff-panel {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 35%;
-  min-width: 280px;
   box-sizing: border-box;
-  display: flex;
   flex-wrap: wrap;
-  margin-top: 16px;
   background: #fcfffd;
   border-radius: 8px;
   padding: 10px;
@@ -227,7 +180,7 @@ footer {
   font-size: 1.1rem;
 }
 
-/* ------- Таблица коэффициентов модели------- */
+/* ------- Таблица коэффициентов ------- */
 .coeff-table {
   width: 100%;
   table-layout: fixed;
@@ -239,6 +192,8 @@ footer {
   border-bottom: 1px solid #ddd;
   text-align: center;
   font-size: 0.9rem;
+  font-weight: normal;
+  background-color: #f0f2f0;
 }
 
 .coeff-table td {
@@ -246,11 +201,6 @@ footer {
   border-bottom: 1px solid #ddd;
   text-align: center;
   font-size: 16px;
-}
-
-.coeff-table th {
-  font-weight: normal;
-  background-color: #f0f2f0;
 }
 
 .coeff-table input {
@@ -267,9 +217,12 @@ footer {
 
 /* ------- График ------- */
 .graph-panel {
-  width: calc(65% - 24px);
   min-width: 300px;
   box-sizing: border-box;
+}
+
+.coeff-column + .graph-panel {
+  width: calc(60% - 24px);
 }
 
 .graph-panel h3 {
@@ -287,6 +240,31 @@ footer {
   position: relative;
 }
 
+/* ------- Таблица точности моделей ------- */
+.metrics-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 4px;
+}
+
+.metrics-table th,
+.metrics-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #ddd;
+  text-align: center;
+  font-size: 16px;
+}
+
+.metrics-table th {
+  font-weight: normal;
+  background-color: #f0f2f0;
+}
+
+.metrics-table td:first-child {
+  text-align: left;
+  font-weight: normal;
+}
+
 /* ------- Блоки расчета ------- */
 textarea {
   width: 100%;
@@ -300,11 +278,18 @@ textarea {
   font-family: inherit;
 }
 
-#generated-data-output {
+.matrix-preview {
   border-radius: 5px;
   border: 1px solid #ededed;
-  padding: 5px;
-  padding-top: 3px;
+  padding: 8px;
+  padding-top: 5px;
+  font-size: 14px;
+  background: #fcfffd;
+  max-height: 120px;
+  overflow-y: auto;
+  min-height: 24px;
+  margin-top: 14px;
+  margin-bottom: 10px;
 }
 
 .copy_button {
@@ -328,6 +313,7 @@ textarea {
   background: rgb(217, 218, 217);
   transform: scale(0.95);
 }
+
 /* ------- Стили для тумблеров -------*/
 .toggle-header {
   display: flex;
@@ -416,4 +402,92 @@ input::-webkit-inner-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
+}
+/* ==================== Панель модели ==================== */
+.general-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.coeff-panel {
+  width: 35%;
+  min-width: 280px;
+  background: #fcfffd;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.graph-panel {
+  width: calc(65% - 24px);
+  min-width: 300px;
+  box-sizing: border-box;
+}
+
+/* ==================== Дополнительные графики ==================== */
+#graf-1,
+#graf-2 {
+  width: 100% !important;
+  height: 320px;
+  display: block;
+  padding: 8px;
+  background: #fcfffd;
+  box-sizing: border-box;
+}
+
+#graf {
+  width: 100% !important;
+  height: 420px;
+  display: block;
+  padding: 8px;
+  background: #fcfffd;
+  box-sizing: border-box;
+}
+
+/* ==================== Таблица точности ==================== */
+.metrics-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 4px;
+}
+
+.metrics-table th,
+.metrics-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #ddd;
+  text-align: center;
+  font-size: 16px;
+}
+
+.metrics-table th {
+  font-weight: normal;
+  background-color: #f0f2f0;
+}
+
+.metrics-table td:first-child {
+  text-align: left;
+}
+
+/* ==================== Расчитанные данные ==================== */
+.matrix-preview {
+  border: 1px solid #ededed;
+  border-radius: 5px;
+  padding: 8px;
+  font-size: 14px;
+  background: #fcfffd;
+  max-height: 120px;
+  overflow-y: auto;
+  min-height: 24px;
+  margin-top: 14px;
+  margin-bottom: 10px;
+}
+
+/* ==================== Скрытие ==================== */
+.hidden {
+  display: none !important;
 }
