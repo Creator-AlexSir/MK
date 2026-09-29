@@ -30,6 +30,19 @@
             <option value="x[t] = a0 + a1 * sqrt(t)"></option>
             <option value="x[t] = a0 + a1 * x[t-1] + a2 * x[t-2]"></option>
           </datalist>
+          <!-- Коэффициент N -->
+          <div class="N-group">
+            <label for="N">N:</label>
+            <input
+              type="number"
+              id="N"
+              class="N-input"
+              value="20"
+              max="1000"
+              oninput="if (parseFloat(this.value) > 1000) this.value = 1000;"
+            />
+          </div>
+
           <!-- Коэффициент Wt -->
           <div class="Wt-group">
             <label for="Wt">Wₜ:</label>
@@ -42,18 +55,6 @@
               max="90000"
               oninput="if (parseFloat(this.value) > 90000) this.value = 90000;"
             />
-            <!-- Коэффициент N -->
-            <div class="N-group">
-              <label for="N">N:</label>
-              <input
-                type="number"
-                id="N"
-                class="N-input"
-                value="20"
-                max="1000"
-                oninput="if (parseFloat(this.value) > 1000) this.value = 1000;"
-              />
-            </div>
           </div>
         </div>
 
@@ -98,7 +99,7 @@
               </div>
               <!-- Блок метрик качества -->
               <div class="metrics-block">
-                <h4>Качество аппроксимации</h4>
+                <h4>Точность модели</h4>
                 <table class="metrics-table">
                   <thead>
                     <tr>

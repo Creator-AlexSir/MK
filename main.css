@@ -204,7 +204,7 @@ footer {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 40%;
+  width: 35%;
   min-width: 280px;
   box-sizing: border-box;
   display: flex;
@@ -267,7 +267,7 @@ footer {
 
 /* ------- График ------- */
 .graph-panel {
-  width: calc(60% - 24px);
+  width: calc(65% - 24px);
   min-width: 300px;
   box-sizing: border-box;
 }
