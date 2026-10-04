@@ -34,10 +34,9 @@ header h1 {
 }
 
 article {
-  margin: 80px 20px 40px 20px;
+  margin: 80px auto 40px;
   max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
+  padding: 0 20px;
 }
 
 footer {
@@ -51,7 +50,7 @@ footer {
 
 /* ------- Общая настройка блоков ------- */
 .block {
-  background: rgb(255, 255, 255);
+  background: #fff;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   padding: 15px 26px;
@@ -77,36 +76,19 @@ footer {
   flex-wrap: wrap;
 }
 
-.formula-group input {
-  font-family: "Century Gothic", "Cambria", serif;
-  font-size: 20px;
-}
-
-.formula-group label {
-  display: block;
-  font-weight: 600;
-  margin-bottom: 8px;
-  font-size: 1rem;
-}
-
 .formula-input {
   flex: 1;
   min-width: 250px;
   padding: 8px 10px;
-  font-size: 20px !important;
+  font-size: 20px;
   border: 1px solid #ccc;
   border-radius: 6px;
   background: #fcfffd;
   transition: 0.2s;
+  font-family: "Century Gothic", "Cambria", serif;
 }
 
 /* ------- Коэффициенты ------- */
-.N-group label,
-.Wt-group label {
-  font-size: 20px;
-  font-weight: normal;
-}
-
 .N-group,
 .Wt-group {
   display: flex;
@@ -114,19 +96,25 @@ footer {
   gap: 8px;
 }
 
+.N-group label,
+.Wt-group label {
+  font-size: 20px;
+  font-weight: normal;
+}
+
 .N-group input,
 .Wt-group input,
 #x0-input {
   width: 80px;
   padding: 8px 10px;
-  font-size: 20px !important;
+  font-size: 20px;
   border: 1px solid #ccc;
   border-radius: 6px;
   background: #fcfffd;
   transition: 0.2s;
 }
 
-/* ------- Настройка панели объединения коэффициентов и графика ------- */
+/* ------- Панель коэффициентов и графика ------- */
 .general-panel {
   display: flex;
   flex-wrap: wrap;
@@ -134,14 +122,12 @@ footer {
   gap: 24px;
   width: 100%;
   margin-top: 20px;
-  box-sizing: border-box;
 }
 
-/* ------- Область под графиком ------- */
-
+/* ------- Кнопки под графиком ------- */
 .button-group {
-  display: flex !important;
-  justify-content: flex-end !important;
+  display: flex;
+  justify-content: flex-end;
   align-items: flex-start;
   gap: 12px;
   width: 100%;
@@ -164,7 +150,6 @@ footer {
 /* ------- Блок метрик качества ------- */
 .metrics-block {
   margin: 20px 0 0 auto;
-  margin-top: 20px;
   padding: 12px;
   background: #fcfffd;
   border: 1px solid #ccc;
@@ -199,16 +184,11 @@ footer {
   font-weight: normal;
   background-color: #f0f2f0;
 }
+
 /* ------- Панель коэффициентов модели ------- */
 .coeff-panel {
-  display: flex;
-  justify-content: center;
-  align-items: center;
   width: 35%;
   min-width: 280px;
-  box-sizing: border-box;
-  display: flex;
-  flex-wrap: wrap;
   margin-top: 16px;
   background: #fcfffd;
   border-radius: 8px;
@@ -227,7 +207,7 @@ footer {
   font-size: 1.1rem;
 }
 
-/* ------- Таблица коэффициентов модели------- */
+/* ------- Таблица коэффициентов ------- */
 .coeff-table {
   width: 100%;
   table-layout: fixed;
@@ -239,6 +219,8 @@ footer {
   border-bottom: 1px solid #ddd;
   text-align: center;
   font-size: 0.9rem;
+  font-weight: normal;
+  background-color: #f0f2f0;
 }
 
 .coeff-table td {
@@ -248,28 +230,21 @@ footer {
   font-size: 16px;
 }
 
-.coeff-table th {
-  font-weight: normal;
-  background-color: #f0f2f0;
-}
-
 .coeff-table input {
   width: 100%;
   max-width: 60px;
-  padding: 8px 0px;
+  padding: 8px 0;
   border-radius: 5px;
   border: 1px solid #ddd;
   text-align: center;
   transition: 0.2s;
   font-size: 16px;
-  box-sizing: border-box;
 }
 
 /* ------- График ------- */
 .graph-panel {
   width: calc(65% - 24px);
   min-width: 300px;
-  box-sizing: border-box;
 }
 
 .graph-panel h3 {
@@ -282,7 +257,6 @@ footer {
 .graf {
   width: 100% !important;
   height: 400px;
-  margin-top: 0px;
   display: block;
   position: relative;
 }
@@ -304,7 +278,6 @@ textarea {
   border-radius: 5px;
   border: 1px solid #ededed;
   padding: 5px;
-  padding-top: 3px;
 }
 
 .copy_button {
@@ -325,10 +298,11 @@ textarea {
 }
 
 .copy_button:active {
-  background: rgb(217, 218, 217);
+  background: #d9dad9;
   transform: scale(0.95);
 }
-/* ------- Стили для тумблеров -------*/
+
+/* ------- Тумблеры ------- */
 .toggle-header {
   display: flex;
   align-items: center;
@@ -356,10 +330,7 @@ textarea {
 .toggle-slider {
   position: absolute;
   cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background-color: #ccc;
   transition: 0.3s;
   border-radius: 34px;
@@ -385,18 +356,8 @@ textarea {
   transform: translateX(26px);
 }
 
-/* ------- Фокусировка -------*/
+/* ------- Фокусировка ------- */
 body :focus {
-  border-color: #6891bc;
-  outline: none;
-}
-
-.coeff-table :focus {
-  border-color: #6891bc;
-  outline: none;
-}
-
-#x0-group input:focus {
   border-color: #6891bc;
   outline: none;
 }
@@ -406,7 +367,7 @@ body :focus {
   display: none !important;
 }
 
-/* ------- Настройка input -------*/
+/* ------- Настройка input ------- */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;

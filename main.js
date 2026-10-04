@@ -26,7 +26,7 @@ const yDataInput = document.getElementById("y-data");
 const generatedDataOutput = document.getElementById("generated-data-output");
 const x0Group = document.getElementById("x0-group");
 const x0Input = document.getElementById("x0-input");
-const copy_btn = document.getElementById("copy_1");
+const copyBtn = document.getElementById("copy_1");
 
 // Тумблеры
 const toggleData = document.getElementById("toggle-data");
@@ -66,26 +66,22 @@ function toSuperscriptNumber(num) {
 
 function convertToDisplayFormula(formula) {
   let result = formula;
-  result = result.replace(
-    /a(\d+)/g,
-    (match, num) => `a${toSubscriptNumber(num)}`,
-  );
+  result = result.replace(/a(\d+)/g, (m, num) => `a${toSubscriptNumber(num)}`);
   result = result.replace(
     /x\[t-(\d+)\]/g,
-    (match, offset) => `xₜ₋${toSubscriptNumber(offset)}`,
+    (m, offset) => `xₜ₋${toSubscriptNumber(offset)}`,
   );
   result = result.replace(/x\[t\]/g, "xₜ");
   result = result.replace(/\bwt\b/g, "wₜ");
   result = result.replace(/\bpi\b/gi, "π");
   result = result.replace(
     /(\w+|\([^)]+\))\s*(\^|\*\*)\s*(\d+)/g,
-    (match, base, _, exp) => `${base}${toSuperscriptNumber(exp)}`,
+    (m, base, _, exp) => `${base}${toSuperscriptNumber(exp)}`,
   );
   return result;
 }
 
 function convertToRawFormula(displayFormula) {
-  let result = displayFormula;
   const decodeSubscript = (subscript) => {
     const map = {
       "₀": "0",
@@ -124,20 +120,21 @@ function convertToRawFormula(displayFormula) {
       .join("");
   };
 
+  let result = displayFormula;
   result = result.replace(
     /xₜ₋([₀₁₂₃₄₅₆₇₈₉]+)/g,
-    (match, sub) => `x[t-${decodeSubscript(sub)}]`,
+    (m, sub) => `x[t-${decodeSubscript(sub)}]`,
   );
   result = result.replace(/xₜ/g, "x[t]");
   result = result.replace(/wₜ/g, "wt");
   result = result.replace(
     /a([₀₁₂₃₄₅₆₇₈₉]+)/g,
-    (match, sub) => `a${decodeSubscript(sub)}`,
+    (m, sub) => `a${decodeSubscript(sub)}`,
   );
   result = result.replace(/π/g, "pi");
   result = result.replace(
     /(\w+|\([^)]+\))([⁰¹²³⁴⁵⁶⁷⁸⁹ⁿ]+)/g,
-    (match, base, sup) => `${base}^${decodeSuperscript(sup)}`,
+    (m, base, sup) => `${base}^${decodeSuperscript(sup)}`,
   );
   return result;
 }
@@ -150,6 +147,19 @@ function extractIndicesFromRaw(rawFormula) {
     indices.add(parseInt(match[1]));
   }
   return Array.from(indices).sort((a, b) => a - b);
+}
+
+// Преобразование формулы в JS-выражение
+function formulaToJS(expr) {
+  return expr
+    .replace(/pi/g, "Math.PI")
+    .replace(/sin\(/g, "Math.sin(")
+    .replace(/cos\(/g, "Math.cos(")
+    .replace(/tan\(/g, "Math.tan(")
+    .replace(/exp\(/g, "Math.exp(")
+    .replace(/ln\(/g, "Math.log(")
+    .replace(/sqrt\(/g, "Math.sqrt(")
+    .replace(/\^/g, "**");
 }
 
 // ==================== ИНТЕРФЕЙС КОЭФФИЦИЕНТОВ ================
@@ -166,13 +176,14 @@ function renderCoeffPanel() {
   container.innerHTML = "";
   for (let idx of currentCoeffIndices) {
     const key = `a${idx}`;
-    let theoryVal = theoryCoeffs[key] !== undefined ? theoryCoeffs[key] : 0;
-    let estimatedVal =
+    const theoryVal = theoryCoeffs[key] !== undefined ? theoryCoeffs[key] : 0;
+    const estimatedVal =
       estimatedCoeffs[key] !== undefined
         ? estimatedCoeffs[key].toFixed(4)
         : "—";
 
     const tr = document.createElement("tr");
+
     const tdName = document.createElement("td");
     tdName.innerHTML = `a${toSubscriptNumber(idx.toString())}`;
     tr.appendChild(tdName);
@@ -185,11 +196,7 @@ function renderCoeffPanel() {
     input.setAttribute("data-coeff", key);
     input.max = "100000";
     input.addEventListener("input", function () {
-      let maxLimit = 100000;
-      if (parseFloat(this.value) > maxLimit) {
-        this.value = maxLimit;
-      }
-
+      if (parseFloat(this.value) > 100000) this.value = 100000;
       theoryCoeffs[key] = parseFloat(this.value) || 0;
       if (currentFormulaRaw && currentCoeffIndices.length > 0)
         recalculateAndPlot();
@@ -200,17 +207,17 @@ function renderCoeffPanel() {
     const tdEstimated = document.createElement("td");
     tdEstimated.textContent = estimatedVal;
     tr.appendChild(tdEstimated);
+
     const tdDeviation = document.createElement("td");
     if (estimatedCoeffs[key] !== undefined && theoryCoeffs[key] !== undefined) {
       let deviation = theoryCoeffs[key] - estimatedCoeffs[key];
-      if (Math.abs(deviation) < 0.0001) {
-        deviation = 0;
-      }
+      if (Math.abs(deviation) < 0.0001) deviation = 0;
       tdDeviation.textContent = deviation.toFixed(4);
     } else {
       tdDeviation.textContent = "—";
     }
     tr.appendChild(tdDeviation);
+
     container.appendChild(tr);
   }
 }
@@ -218,10 +225,8 @@ function renderCoeffPanel() {
 function syncTheoryFromDom() {
   const container = document.getElementById("coeffs-table-body");
   if (!container) return;
-  const inputs = container.querySelectorAll("input[data-coeff]");
-  inputs.forEach((inp) => {
-    const key = inp.getAttribute("data-coeff");
-    theoryCoeffs[key] = parseFloat(inp.value) || 0;
+  container.querySelectorAll("input[data-coeff]").forEach((inp) => {
+    theoryCoeffs[inp.getAttribute("data-coeff")] = parseFloat(inp.value) || 0;
   });
 }
 
@@ -229,26 +234,16 @@ function syncTheoryFromDom() {
 function calculateModel(coeffs, length) {
   if (!currentFormulaRaw || currentCoeffIndices.length === 0) return [];
 
-  let baseExpr = currentFormulaRaw
-    .replace(/pi/g, "Math.PI")
-    .replace(/sin\(/g, "Math.sin(")
-    .replace(/cos\(/g, "Math.cos(")
-    .replace(/tan\(/g, "Math.tan(")
-    .replace(/exp\(/g, "Math.exp(")
-    .replace(/ln\(/g, "Math.log(")
-    .replace(/sqrt\(/g, "Math.sqrt(")
-    .replace(/\^/g, "**");
-
-  let result = [];
-  const wtMultiplier = wtCoeffInput ? (parseFloat(wtCoeffInput.value) ?? 1) : 1;
+  const baseExpr = formulaToJS(currentFormulaRaw);
+  const result = [];
+  const wtMultiplier = wtCoeffInput ? parseFloat(wtCoeffInput.value) || 1 : 1;
 
   for (let t = 0; t < length; t++) {
     let evalExpr = baseExpr;
 
     evalExpr = evalExpr.replace(/x\[t-(\d+)\]/g, (match, lag) => {
       const idx = t - parseInt(lag);
-      if (idx >= 0 && idx < result.length) return result[idx];
-      return x0Value;
+      return idx >= 0 && idx < result.length ? result[idx] : x0Value;
     });
 
     evalExpr = evalExpr.replace(/\bt\b/g, t);
@@ -257,14 +252,14 @@ function calculateModel(coeffs, length) {
       evalExpr = evalExpr.replace(new RegExp(`\\b${key}\\b`, "g"), val);
     }
 
-    let wt = (getNormalRandom() * wtMultiplier).toString();
+    const wt = getNormalRandom() * wtMultiplier;
     evalExpr = evalExpr.replace(/\bwt\b/g, wt);
 
     try {
-      let val = eval(evalExpr);
+      const val = eval(evalExpr);
       result[t] = isNaN(val) || !isFinite(val) ? 0 : val;
     } catch (e) {
-      console.error("Ошибка в формуле при вычислении eval:", evalExpr, e);
+      console.error("Ошибка в формуле:", evalExpr, e);
       result[t] = 0;
     }
   }
@@ -274,32 +269,37 @@ function calculateModel(coeffs, length) {
 function recalculateAndPlot() {
   if (currentCoeffIndices.length === 0) {
     plotGraphEmpty();
+    updateMetricsDisplay();
     return;
   }
-  let hasValidCoeffs =
+
+  const hasValidCoeffs =
     Object.keys(theoryCoeffs).length > 0 &&
     Object.values(theoryCoeffs).some((v) => v !== 0);
+
   if (hasValidCoeffs) {
     xValues = calculateModel(theoryCoeffs, N);
   } else {
-    let tempCoeffs = {};
+    const tempCoeffs = {};
     for (let idx of currentCoeffIndices) tempCoeffs[`a${idx}`] = 0;
     xValues = calculateModel(tempCoeffs, N);
   }
-  if (estimatedCoeffs && Object.keys(estimatedCoeffs).length > 0) {
-    window.lsmValues = calculateModel(estimatedCoeffs, N);
-  } else {
-    window.lsmValues = [];
-  }
+
+  window.lsmValues =
+    estimatedCoeffs && Object.keys(estimatedCoeffs).length > 0
+      ? calculateModel(estimatedCoeffs, N)
+      : [];
+
   plotGraph();
   updateMetricsDisplay();
 }
 
-// ==================== МАТЕМАТИЧЕСКИЙ АППАРАТ (МНК) ============
+// ==================== МНК ===================================
 function solveLinear(A, b) {
-  let n = b.length;
-  let M = A.map((row) => [...row]);
-  let v = [...b];
+  const n = b.length;
+  const M = A.map((row) => [...row]);
+  const v = [...b];
+
   for (let i = 0; i < n; i++) {
     let max = i;
     for (let j = i + 1; j < n; j++)
@@ -308,12 +308,13 @@ function solveLinear(A, b) {
     [v[i], v[max]] = [v[max], v[i]];
     if (Math.abs(M[i][i]) < 1e-12) return null;
     for (let j = i + 1; j < n; j++) {
-      let factor = M[j][i] / M[i][i];
+      const factor = M[j][i] / M[i][i];
       v[j] -= factor * v[i];
       for (let k = i; k < n; k++) M[j][k] -= factor * M[i][k];
     }
   }
-  let res = new Array(n);
+
+  const res = new Array(n);
   for (let i = n - 1; i >= 0; i--) {
     let sum = 0;
     for (let j = i + 1; j < n; j++) sum += M[i][j] * res[j];
@@ -328,8 +329,7 @@ function estimateCoefficientsFromData() {
     return;
   }
 
-  let rawData = yDataInput.value;
-
+  const rawData = yDataInput.value;
   if (!rawData.trim()) {
     estimatedCoeffs = {};
     renderCoeffPanel();
@@ -337,7 +337,7 @@ function estimateCoefficientsFromData() {
     return;
   }
 
-  let ySeries = rawData
+  const ySeries = rawData
     .split(/[\s,;]+/)
     .map(Number)
     .filter((v) => !isNaN(v));
@@ -351,10 +351,10 @@ function estimateCoefficientsFromData() {
 
   const k = currentCoeffIndices.length;
   const n = ySeries.length;
-  let Z = [];
+  const Z = [];
 
   for (let t = 0; t < n; t++) {
-    let row = [];
+    const row = [];
     for (let idx of currentCoeffIndices) {
       let expr = currentFormulaRaw;
       for (let other of currentCoeffIndices) {
@@ -363,32 +363,28 @@ function estimateCoefficientsFromData() {
           other === idx ? 1 : 0,
         );
       }
-      expr = expr
-        .replace(/pi/g, "Math.PI")
-        .replace(/sin\(/g, "Math.sin(")
-        .replace(/cos\(/g, "Math.cos(")
-        .replace(/tan\(/g, "Math.tan(")
-        .replace(/exp\(/g, "Math.exp(")
-        .replace(/ln\(/g, "Math.log(")
-        .replace(/sqrt\(/g, "Math.sqrt(")
-        .replace(/\^/g, "**");
+      expr = formulaToJS(expr);
 
       expr = expr.replace(/x\[t-(\d+)\]/g, (match, lag) => {
         const idxPast = t - parseInt(lag);
-        if (idxPast >= 0 && idxPast < ySeries.length) return ySeries[idxPast];
-        return 0;
+        return idxPast >= 0 && idxPast < ySeries.length ? ySeries[idxPast] : 0;
       });
       expr = expr.replace(/\bwt\b/g, "0").replace(/\bt\b/g, t);
-      let val = eval(expr);
-      row.push(val);
+
+      try {
+        row.push(eval(expr));
+      } catch {
+        row.push(0);
+      }
     }
     Z.push(row);
   }
 
-  let ZTZ = Array(k)
+  const ZTZ = Array(k)
     .fill()
     .map(() => Array(k).fill(0));
-  let ZTy = Array(k).fill(0);
+  const ZTy = Array(k).fill(0);
+
   for (let i = 0; i < k; i++) {
     for (let j = 0; j < k; j++) {
       for (let m = 0; m < n; m++) ZTZ[i][j] += Z[m][i] * Z[m][j];
@@ -403,18 +399,18 @@ function estimateCoefficientsFromData() {
   }
 
   estimatedCoeffs = {};
-  for (let idxPos = 0; idxPos < currentCoeffIndices.length; idxPos++) {
-    estimatedCoeffs[`a${currentCoeffIndices[idxPos]}`] = solution[idxPos];
+  for (let i = 0; i < currentCoeffIndices.length; i++) {
+    estimatedCoeffs[`a${currentCoeffIndices[i]}`] = solution[i];
   }
 
   renderCoeffPanel();
   recalculateAndPlot();
-  updateMetricsDisplay();
 }
 
 // ==================== ОТРИСОВКА ГРАФИКОВ ====================
 function plotGraph() {
-  let datasets = [];
+  const datasets = [];
+
   if (xValues && xValues.length > 0) {
     datasets.push({
       label: "Теоретическая модель",
@@ -424,6 +420,7 @@ function plotGraph() {
       points: { show: true, radius: 2.5 },
     });
   }
+
   if (window.lsmValues && window.lsmValues.length > 0) {
     datasets.push({
       label: "Расчетная модель (МНК)",
@@ -433,10 +430,12 @@ function plotGraph() {
       points: { show: true, radius: 2.5 },
     });
   }
+
   if (datasets.length === 0) {
     plotGraphEmpty();
     return;
   }
+
   try {
     $.plot($("#graf"), datasets, {
       grid: { hoverable: true, clickable: true },
@@ -454,14 +453,16 @@ function plotGraphEmpty() {
 function onGenerateDirect() {
   if (nInput) N = parseInt(nInput.value) || 20;
   syncTheoryFromDom();
-  let generated = calculateModel(theoryCoeffs, N);
+  const generated = calculateModel(theoryCoeffs, N);
   xValues = generated;
+
   if (generatedDataOutput) {
     generatedDataOutput.textContent = generated
       .map((v) => v.toFixed(4))
       .join(", ");
   }
   plotGraph();
+  updateMetricsDisplay();
 }
 
 function onFormulaChange() {
@@ -470,17 +471,17 @@ function onFormulaChange() {
     userInput = userInput.substring(userInput.indexOf("=") + 1).trim();
   }
 
-  let rawValue = convertToRawFormula(userInput);
-  let displayValue = convertToDisplayFormula(rawValue);
-  let fullDisplayValue = "xₜ = " + displayValue;
+  const rawValue = convertToRawFormula(userInput);
+  const displayValue = convertToDisplayFormula(rawValue);
+  const fullDisplayValue = "xₜ = " + displayValue;
 
   if (formulaInput.value !== fullDisplayValue && rawValue !== "") {
     formulaInput.value = fullDisplayValue;
   }
   currentFormulaRaw = rawValue;
 
-  let newIndices = extractIndicesFromRaw(rawValue);
-  let oldTheoryCoeffs = { ...theoryCoeffs };
+  const newIndices = extractIndicesFromRaw(rawValue);
+  const oldTheoryCoeffs = { ...theoryCoeffs };
   currentCoeffIndices = newIndices;
 
   for (let idx of currentCoeffIndices) {
@@ -489,7 +490,7 @@ function onFormulaChange() {
       oldTheoryCoeffs[key] !== undefined ? oldTheoryCoeffs[key] : 0;
   }
 
-  let validKeys = new Set(currentCoeffIndices.map((idx) => `a${idx}`));
+  const validKeys = new Set(currentCoeffIndices.map((idx) => `a${idx}`));
   for (let key in theoryCoeffs) {
     if (!validKeys.has(key)) delete theoryCoeffs[key];
   }
@@ -500,9 +501,8 @@ function onFormulaChange() {
   renderCoeffPanel();
   recalculateAndPlot();
 
-  if (formulaInput && x0Group) {
+  if (x0Group) {
     const hasLag = /x\[t-\d+\]/.test(currentFormulaRaw);
-
     if (hasLag) {
       x0Group.classList.remove("hidden");
     } else {
@@ -511,34 +511,27 @@ function onFormulaChange() {
       if (x0Input) x0Input.value = 0;
     }
   }
+
+  onGenerateDirect();
 }
 
 // ==================== НАСТРОЙКА ТУМБЛЕРОВ ====================
 function initToggles() {
   if (toggleData && dataContent) {
     toggleData.addEventListener("change", function () {
-      if (this.checked) {
-        dataContent.classList.remove("hidden");
-      } else {
-        dataContent.classList.add("hidden");
-      }
+      dataContent.classList.toggle("hidden", !this.checked);
     });
   }
-
   if (toggleDirect && directContent) {
     toggleDirect.addEventListener("change", function () {
-      if (this.checked) {
-        directContent.classList.remove("hidden");
-      } else {
-        directContent.classList.add("hidden");
-      }
+      directContent.classList.toggle("hidden", !this.checked);
     });
   }
 }
 
 // ==================== ОБРАБОТЧИКИ СОБЫТИЙ ====================
 formulaInput.addEventListener("input", onFormulaChange);
-formulaInput.addEventListener("input", onGenerateDirect);
+
 if (nInput) {
   nInput.addEventListener("input", function () {
     N = parseInt(this.value) || 20;
@@ -546,15 +539,18 @@ if (nInput) {
     onGenerateDirect();
   });
 }
+
 if (wtCoeffInput) {
-  wtCoeffInput.addEventListener(
-    "input",
-    () => (recalculateAndPlot(), onGenerateDirect()),
-  );
+  wtCoeffInput.addEventListener("input", () => {
+    recalculateAndPlot();
+    onGenerateDirect();
+  });
 }
+
 if (tbody) {
   tbody.addEventListener("input", onGenerateDirect);
 }
+
 if (yDataInput) {
   yDataInput.addEventListener("input", estimateCoefficientsFromData);
 }
@@ -567,40 +563,41 @@ if (x0Input) {
   });
 }
 
-if (copy_btn) {
-  copy_btn.addEventListener("click", function () {
+if (copyBtn) {
+  copyBtn.addEventListener("click", function () {
     navigator.clipboard.writeText(generatedDataOutput.textContent || "");
   });
 }
 
-document.addEventListener("wheel", function (event) {
+document.addEventListener("wheel", function () {
   if (document.activeElement && document.activeElement.type === "number") {
     document.activeElement.blur();
   }
 });
 
-// ==================== РАСЧЁТ ОСТАТКОВ И МЕТРИК ============
+// ==================== МЕТРИКИ ================================
 function calculateResiduals() {
   if (!xValues || xValues.length === 0) return null;
   if (!window.lsmValues || window.lsmValues.length === 0) return null;
   if (xValues.length !== window.lsmValues.length) return null;
 
-  let residuals = [];
+  const residuals = [];
   let sumAbs = 0;
   let sumSq = 0;
 
   for (let i = 0; i < xValues.length; i++) {
-    let e = xValues[i] - window.lsmValues[i];
+    const e = xValues[i] - window.lsmValues[i];
     residuals.push(e);
     sumAbs += Math.abs(e);
     sumSq += e * e;
   }
 
-  let n = residuals.length;
-  let mae = sumAbs / n;
-  let rmse = Math.sqrt(sumSq / n);
-
-  return { residuals, mae, rmse };
+  const n = residuals.length;
+  return {
+    residuals,
+    mae: sumAbs / n,
+    rmse: Math.sqrt(sumSq / n),
+  };
 }
 
 function updateMetricsDisplay() {
@@ -619,7 +616,7 @@ function updateMetricsDisplay() {
   rmseEl.textContent = result.rmse.toFixed(4);
 }
 
-// ==================== ИНИЦИАЛИЗАЦИЯ ====================
+// ==================== ИНИЦИАЛИЗАЦИЯ =========================
 window.addEventListener("DOMContentLoaded", () => {
   initToggles();
   formulaInput.value = "";
