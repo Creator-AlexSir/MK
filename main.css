@@ -1,3 +1,23 @@
+/* ------- Переменные (Цвета) ------- */
+:root {
+  /* Фоны */
+  --bg-main: #f9faf9; /* Общий фон страницы */
+  --bg-card: #ffffff; /* Фон блоков */
+  --bg-input: #fcfffd; /* Фон полей ввода */
+  --bg-header-table: #f0f2f0; /* Фон шапки таблиц*/
+
+  --text-main: #1f1e0a; /* Основной цвет текста */
+  --text-title: #2c3e2f; /* Цвет заголовков h3 */
+
+  --border-main: #ccc; /* Границы полей и рамки */
+  --border-light: #ddd; /* Разделители в таблицах */
+  --border-card: #ededed; /* Граница текстового вывода */
+
+  --accent-purple: #806edc; /* Фиолетовый акцент (шапка и низ) */
+  --accent-blue: #567ac4; /* Синий активныый тумблер */
+  --accent-focus: #6891bc; /* Голубая рамка фокуса инпутов */
+}
+
 /* ------- Общие настройки ------- */
 * {
   box-sizing: border-box;
@@ -6,19 +26,20 @@
 body {
   margin: 0;
   padding: 0;
-  background-color: #f9faf9;
-  color: #1f1e0a;
+  background-color: var(--bg-main);
+  color: var(--text-main);
   font-family: "Century Gothic", "Cambria", serif;
   font-size: 16px;
 }
 
+/* ------- Шапка ------- */
 header {
   position: fixed;
   top: 0;
   width: 100%;
   height: 52px;
-  background-color: #f9faf9;
-  border-bottom: 2px solid #806edc;
+  background-color: var(--bg-main);
+  border-bottom: 2px solid var(--accent-purple);
   z-index: 10;
   display: flex;
   align-items: center;
@@ -33,6 +54,7 @@ header h1 {
   letter-spacing: 0.5px;
 }
 
+/* ------- Основной контент и низ ------- */
 article {
   margin: 80px auto 40px;
   max-width: 1200px;
@@ -43,14 +65,14 @@ footer {
   text-align: center;
   padding: 5px;
   font-size: 13px;
-  border-top: 1px solid #806edc;
-  background-color: #f9faf9;
+  border-top: 1px solid var(--accent-purple);
+  background-color: var(--bg-main);
   margin-top: 40px;
 }
 
-/* ------- Общая настройка блоков ------- */
+/* ------- Блоки ------- */
 .block {
-  background: #fff;
+  background: var(--bg-card);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   padding: 15px 26px;
@@ -62,11 +84,11 @@ footer {
   margin-top: 0;
   margin-bottom: 0;
   font-weight: 500;
-  color: #2c3e2f;
+  color: var(--text-title);
   font-size: 1.3rem;
 }
 
-/* ------- Формула ------- */
+/* ------- Ввод формулы и параметров ------- */
 .formula-group {
   display: flex;
   align-items: center;
@@ -77,27 +99,29 @@ footer {
 }
 
 .formula-input {
+  font-family: "Century Gothic";
   flex: 1;
   min-width: 250px;
   padding: 8px 10px;
   font-size: 20px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-main);
   border-radius: 6px;
-  background: #fcfffd;
+  background: var(--bg-input);
   transition: 0.2s;
-  font-family: "Century Gothic", "Cambria", serif;
 }
 
-/* ------- Коэффициенты ------- */
+/* Группы полей N, Wt и X0 */
 .N-group,
-.Wt-group {
+.Wt-group,
+#x0-group {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
 .N-group label,
-.Wt-group label {
+.Wt-group label,
+#x0-group label {
   font-size: 20px;
   font-weight: normal;
 }
@@ -108,10 +132,14 @@ footer {
   width: 80px;
   padding: 8px 10px;
   font-size: 20px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-main);
   border-radius: 6px;
-  background: #fcfffd;
+  background: var(--bg-input);
   transition: 0.2s;
+}
+
+#x0-group {
+  margin-top: 10px;
 }
 
 /* ------- Панель коэффициентов и графика ------- */
@@ -124,76 +152,13 @@ footer {
   margin-top: 20px;
 }
 
-/* ------- Кнопки под графиком ------- */
-.button-group {
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-start;
-  gap: 12px;
-  width: 100%;
-  margin-top: 10px;
-}
-
-#x0-group {
-  margin-right: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 5px;
-}
-
-#x0-group label {
-  font-size: 20px;
-  font-weight: normal;
-}
-
-/* ------- Блок метрик качества ------- */
-.metrics-block {
-  margin: 20px 0 0 auto;
-  padding: 12px;
-  background: #fcfffd;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 60%;
-}
-
-.metrics-block h4 {
-  margin: 0 0 10px 0;
-  font-weight: 500;
-  font-size: 1.1rem;
-  text-align: center;
-}
-
-.metrics-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.metrics-table th,
-.metrics-table td {
-  padding: 6px 10px;
-  border-bottom: 1px solid #ddd;
-  text-align: center;
-  font-size: 16px;
-}
-
-.metrics-table th {
-  font-weight: normal;
-  background-color: #f0f2f0;
-}
-
-/* ------- Панель коэффициентов модели ------- */
 .coeff-panel {
   width: 35%;
   min-width: 280px;
-  margin-top: 16px;
-  background: #fcfffd;
+  background: var(--bg-input);
   border-radius: 8px;
   padding: 10px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-main);
 }
 
 .coeff-panel h4 {
@@ -205,40 +170,6 @@ footer {
   align-items: center;
   justify-content: center;
   font-size: 1.1rem;
-}
-
-/* ------- Таблица коэффициентов ------- */
-.coeff-table {
-  width: 100%;
-  table-layout: fixed;
-  border-collapse: collapse;
-}
-
-.coeff-table th {
-  padding: 5px 2px;
-  border-bottom: 1px solid #ddd;
-  text-align: center;
-  font-size: 0.9rem;
-  font-weight: normal;
-  background-color: #f0f2f0;
-}
-
-.coeff-table td {
-  padding: 5px 2px;
-  border-bottom: 1px solid #ddd;
-  text-align: center;
-  font-size: 16px;
-}
-
-.coeff-table input {
-  width: 100%;
-  max-width: 60px;
-  padding: 8px 0;
-  border-radius: 5px;
-  border: 1px solid #ddd;
-  text-align: center;
-  transition: 0.2s;
-  font-size: 16px;
 }
 
 /* ------- График ------- */
@@ -261,13 +192,78 @@ footer {
   position: relative;
 }
 
-/* ------- Блоки расчета ------- */
+/* ------- Блок метрик ------- */
+.metrics-block {
+  margin: 20px 0 0 auto;
+  padding: 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-main);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 60%;
+}
+
+.metrics-block h4 {
+  margin: 0 0 10px 0;
+  font-weight: 500;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+/* ------- Таблицы ------- */
+.coeff-table,
+.metrics-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.coeff-table {
+  table-layout: fixed;
+}
+
+.coeff-table th,
+.metrics-table th {
+  padding: 5px 2px;
+  border-bottom: 1px solid var(--border-light);
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: normal;
+  background-color: var(--bg-header-table);
+}
+
+.coeff-table td,
+.metrics-table td {
+  padding: 5px 2px;
+  border-bottom: 1px solid var(--border-light);
+  text-align: center;
+  font-size: 16px;
+}
+
+.metrics-table th,
+.metrics-table td {
+  padding: 6px 10px;
+}
+
+.coeff-table input {
+  width: 100%;
+  max-width: 60px;
+  padding: 8px 0;
+  border-radius: 5px;
+  border: 1px solid var(--border-light);
+  text-align: center;
+  transition: 0.2s;
+  font-size: 16px;
+}
+
+/* ------- Поля вывода и текста ------- */
 textarea {
   width: 100%;
   padding: 12px;
   border-radius: 6px;
-  border: 1px solid #ccc;
-  background: #fcfffd;
+  border: 1px solid var(--border-main);
+  background: var(--bg-input);
   resize: vertical;
   transition: 0.2s;
   font-size: 0.95rem;
@@ -276,14 +272,15 @@ textarea {
 
 #generated-data-output {
   border-radius: 5px;
-  border: 1px solid #ededed;
+  border: 1px solid var(--border-card);
   padding: 5px;
 }
 
+/* Кнопка копирования */
 .copy_button {
-  background: #f0f2f0;
+  background: var(--bg-header-table);
   border: none;
-  color: #1f1e0a;
+  color: var(--text-main);
   padding: 5px 14px;
   border-radius: 15px;
   cursor: pointer;
@@ -314,10 +311,11 @@ textarea {
   margin: 0;
 }
 
+/* Переключатель */
 .toggle-switch {
   position: relative;
   display: inline-block;
-  width: 52px;
+  width: 48px;
   height: 26px;
 }
 
@@ -327,38 +325,42 @@ textarea {
   height: 0;
 }
 
+/* Дорожка */
 .toggle-slider {
   position: absolute;
-  cursor: pointer;
   inset: 0;
-  background-color: #ccc;
-  transition: 0.3s;
-  border-radius: 34px;
+  cursor: pointer;
+  background-color: var(--border-main);
+  border-radius: 20px;
+  transition: background-color 0.25s ease;
+  padding: 3px;
 }
 
-.toggle-slider:before {
-  position: absolute;
+/* Круг */
+.toggle-slider::before {
   content: "";
-  height: 20px;
-  width: 20px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: 0.3s;
+  display: block;
+  height: 100%;
+  aspect-ratio: 1;
+  background-color: #ffffff;
   border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Включение */
 .toggle-switch input:checked + .toggle-slider {
-  background-color: #567ac4;
+  background-color: var(--accent-blue);
 }
 
-.toggle-switch input:checked + .toggle-slider:before {
-  transform: translateX(26px);
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(22px);
 }
 
-/* ------- Фокусировка ------- */
-body :focus {
-  border-color: #6891bc;
+/* ------- Фокус ------- */
+input:focus,
+textarea:focus {
+  border-color: var(--accent-focus);
   outline: none;
 }
 
@@ -367,7 +369,6 @@ body :focus {
   display: none !important;
 }
 
-/* ------- Настройка input ------- */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
