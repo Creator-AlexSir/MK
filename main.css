@@ -1,4 +1,4 @@
-/* ------- Переменные (Цвета) ------- */
+/* ------- Переменные ------- */
 :root {
   /* Фоны */
   --bg-main: #f9faf9; /* Общий фон страницы */
@@ -103,7 +103,7 @@ footer {
   flex: 1;
   min-width: 250px;
   padding: 8px 10px;
-  font-size: 20px;
+  font-size: 22px;
   border: 1px solid var(--border-main);
   border-radius: 6px;
   background: var(--bg-input);
@@ -128,7 +128,8 @@ footer {
 
 .N-group input,
 .Wt-group input,
-#x0-input {
+#x0-input_1,
+#x0-input_2 {
   width: 80px;
   padding: 8px 10px;
   font-size: 20px;
@@ -138,7 +139,8 @@ footer {
   transition: 0.2s;
 }
 
-#x0-group {
+#x0-group_1,
+#x0-group_2 {
   margin-top: 10px;
 }
 
@@ -270,13 +272,14 @@ textarea {
   font-family: inherit;
 }
 
-#generated-data-output {
+#generated-data-output_1,
+#generated-data-output_2 {
   border-radius: 5px;
   border: 1px solid var(--border-card);
   padding: 5px;
 }
 
-/* Кнопка копирования */
+/* ------- Кнопка копирования ------- */
 .copy_button {
   background: var(--bg-header-table);
   border: none;
@@ -360,6 +363,16 @@ textarea {
 /* ------- Фокус ------- */
 input:focus,
 textarea:focus {
+  border-color: var(--accent-focus);
+  outline: none;
+}
+
+#x0-input_1:focus {
+  border-color: var(--accent-focus);
+  outline: none;
+}
+
+#x0-input_2:focus {
   border-color: var(--accent-focus);
   outline: none;
 }
