@@ -606,16 +606,18 @@ function onFormulaChangeForModel(modelNum) {
 // ==================== ТУМБЛЕРЫ И ОБРАБОТЧИКИ СОБЫТИЙ ============
 function initToggles() {
   document.querySelectorAll(".toggle-switch input").forEach((checkbox) => {
-    checkbox.addEventListener("change", function () {
-      const block = this.closest(".block");
+    function update() {
+      const block = checkbox.closest(".block");
       if (!block) return;
       const children = Array.from(block.children).filter(
         (el) => !el.classList.contains("toggle-header"),
       );
       children.forEach((child) => {
-        child.classList.toggle("hidden", !this.checked);
+        child.classList.toggle("hidden", !checkbox.checked);
       });
-    });
+    }
+    update();
+    checkbox.addEventListener("change", update);
   });
 }
 
