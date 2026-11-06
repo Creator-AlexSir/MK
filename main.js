@@ -1,12 +1,24 @@
 // ==================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==================
-let currentFormulaRaw = "";
-let currentCoeffIndices = [];
-let xValues = [];
 let N = 20;
-let x0Value = 0;
+let point = false;
 
-let theoryCoeffs = {};
-let estimatedCoeffs = {};
+// Переменные Модели 1
+let currentFormulaRaw_1 = "";
+let currentCoeffIndices_1 = [];
+let theoryCoeffs_1 = {};
+let estimatedCoeffs_1 = {};
+let xValues_1 = [];
+let lsmValues_1 = [];
+let x0Value_1 = 0;
+
+// Переменные Модели 2
+let currentFormulaRaw_2 = "";
+let currentCoeffIndices_2 = [];
+let theoryCoeffs_2 = {};
+let estimatedCoeffs_2 = {};
+let xValues_2 = [];
+let lsmValues_2 = [];
+let x0Value_2 = 0;
 
 // ==================== ГЕНЕРАЦИЯ ШУМА ========================
 function getNormalRandom() {
@@ -18,21 +30,30 @@ function getNormalRandom() {
 }
 
 // ==================== DOM ЭЛЕМЕНТЫ ==========================
-const formulaInput = document.getElementById("formula");
 const nInput = document.getElementById("N");
-const wtCoeffInput = document.getElementById("Wt");
-const tbody = document.getElementById("coeffs-table-body");
 const yDataInput = document.getElementById("y-data");
-const generatedDataOutput = document.getElementById("generated-data-output");
-const x0Group = document.getElementById("x0-group");
-const x0Input = document.getElementById("x0-input");
-const copyBtn = document.getElementById("copy_1");
 
-// Тумблеры
-const toggleData = document.getElementById("toggle-data");
-const toggleDirect = document.getElementById("toggle-direct");
-const dataContent = document.getElementById("data-content");
-const directContent = document.getElementById("direct-content");
+// Блок 1
+const formulaInput_1 = document.getElementById("formula_1");
+const wtCoeffInput_1 = document.getElementById("Wt_1");
+const tbody_1 = document.getElementById("coeffs-table-body_1");
+const generatedDataOutput_1 = document.getElementById(
+  "generated-data-output_1",
+);
+const x0Group_1 = document.getElementById("x0-group_1");
+const x0Input_1 = document.getElementById("x0-input_1");
+const copyBtn_1 = document.getElementById("copy_1");
+
+// Блок 2
+const formulaInput_2 = document.getElementById("formula_2");
+const wtCoeffInput_2 = document.getElementById("Wt_2");
+const tbody_2 = document.getElementById("coeffs-table-body_2");
+const generatedDataOutput_2 = document.getElementById(
+  "generated-data-output_2",
+);
+const x0Group_2 = document.getElementById("x0-group_2");
+const x0Input_2 = document.getElementById("x0-input_2");
+const copyBtn_2 = document.getElementById("copy_2");
 
 // ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==================
 function toSubscriptNumber(num) {
@@ -149,7 +170,6 @@ function extractIndicesFromRaw(rawFormula) {
   return Array.from(indices).sort((a, b) => a - b);
 }
 
-// Преобразование формулы в JS-выражение
 function formulaToJS(expr) {
   return expr
     .replace(/pi/g, "Math.PI")
@@ -162,25 +182,37 @@ function formulaToJS(expr) {
     .replace(/\^/g, "**");
 }
 
-// ==================== ИНТЕРФЕЙС КОЭФФИЦИЕНТОВ ================
-function renderCoeffPanel() {
-  const container = document.getElementById("coeffs-table-body");
+function getSeriesFromInput() {
+  if (!yDataInput || !yDataInput.value.trim()) return null;
+  const series = yDataInput.value
+    .split(/[\s,;]+/)
+    .map(Number)
+    .filter((v) => !isNaN(v));
+  return series.length >= 3 ? series : null;
+}
+
+// ==================== РЕНДЕР ТАБЛИЦЫ КОЭФФИЦИЕНТОВ ============
+function renderCoeffPanelForModel(modelNum) {
+  const container = modelNum === 1 ? tbody_1 : tbody_2;
+  const indices =
+    modelNum === 1 ? currentCoeffIndices_1 : currentCoeffIndices_2;
+  const theoryMap = modelNum === 1 ? theoryCoeffs_1 : theoryCoeffs_2;
+  const estimatedMap = modelNum === 1 ? estimatedCoeffs_1 : estimatedCoeffs_2;
+
   if (!container) return;
 
-  if (!currentCoeffIndices || currentCoeffIndices.length === 0) {
+  if (!indices || indices.length === 0) {
     container.innerHTML =
       '<tr><td colspan="4" style="text-align:center; color:#aaa;">— нет коэффициентов —</td></tr>';
     return;
   }
 
   container.innerHTML = "";
-  for (let idx of currentCoeffIndices) {
+  for (let idx of indices) {
     const key = `a${idx}`;
-    const theoryVal = theoryCoeffs[key] !== undefined ? theoryCoeffs[key] : 0;
+    const theoryVal = theoryMap[key] !== undefined ? theoryMap[key] : 0;
     const estimatedVal =
-      estimatedCoeffs[key] !== undefined
-        ? estimatedCoeffs[key].toFixed(4)
-        : "—";
+      estimatedMap[key] !== undefined ? estimatedMap[key].toFixed(4) : "—";
 
     const tr = document.createElement("tr");
 
@@ -197,9 +229,8 @@ function renderCoeffPanel() {
     input.max = "100000";
     input.addEventListener("input", function () {
       if (parseFloat(this.value) > 100000) this.value = 100000;
-      theoryCoeffs[key] = parseFloat(this.value) || 0;
-      if (currentFormulaRaw && currentCoeffIndices.length > 0)
-        recalculateAndPlot();
+      theoryMap[key] = parseFloat(this.value) || 0;
+      recalculateAll();
     });
     tdTheory.appendChild(input);
     tr.appendChild(tdTheory);
@@ -209,8 +240,8 @@ function renderCoeffPanel() {
     tr.appendChild(tdEstimated);
 
     const tdDeviation = document.createElement("td");
-    if (estimatedCoeffs[key] !== undefined && theoryCoeffs[key] !== undefined) {
-      let deviation = theoryCoeffs[key] - estimatedCoeffs[key];
+    if (estimatedMap[key] !== undefined && theoryMap[key] !== undefined) {
+      let deviation = theoryMap[key] - estimatedMap[key];
       if (Math.abs(deviation) < 0.0001) deviation = 0;
       tdDeviation.textContent = deviation.toFixed(4);
     } else {
@@ -222,28 +253,41 @@ function renderCoeffPanel() {
   }
 }
 
-function syncTheoryFromDom() {
-  const container = document.getElementById("coeffs-table-body");
+function syncTheoryFromDomForModel(modelNum) {
+  const container = modelNum === 1 ? tbody_1 : tbody_2;
+  const theoryMap = modelNum === 1 ? theoryCoeffs_1 : theoryCoeffs_2;
+
   if (!container) return;
   container.querySelectorAll("input[data-coeff]").forEach((inp) => {
-    theoryCoeffs[inp.getAttribute("data-coeff")] = parseFloat(inp.value) || 0;
+    theoryMap[inp.getAttribute("data-coeff")] = parseFloat(inp.value) || 0;
   });
 }
 
-// ==================== ВЫЧИСЛЕНИЯ И МОДЕЛИРОВАНИЕ ============
-function calculateModel(coeffs, length) {
-  if (!currentFormulaRaw || currentCoeffIndices.length === 0) return [];
+// ==================== РАСЧЕТ МОДЕЛЕЙ =====================
+function calculateModelSeries(
+  rawFormula,
+  indices,
+  coeffs,
+  wtInput,
+  x0Val,
+  ySeries,
+  stepsCount,
+) {
+  if (!rawFormula || indices.length === 0) return [];
 
-  const baseExpr = formulaToJS(currentFormulaRaw);
+  const baseExpr = formulaToJS(rawFormula);
   const result = [];
-  const wtMultiplier = wtCoeffInput ? parseFloat(wtCoeffInput.value) || 1 : 1;
+  const wtMultiplier = wtInput ? parseFloat(wtInput.value) || 1 : 1;
 
-  for (let t = 0; t < length; t++) {
+  for (let t = 0; t < stepsCount; t++) {
     let evalExpr = baseExpr;
 
     evalExpr = evalExpr.replace(/x\[t-(\d+)\]/g, (match, lag) => {
       const idx = t - parseInt(lag);
-      return idx >= 0 && idx < result.length ? result[idx] : x0Value;
+      if (idx >= 0) {
+        return ySeries && idx < ySeries.length ? ySeries[idx] : result[idx];
+      }
+      return x0Val;
     });
 
     evalExpr = evalExpr.replace(/\bt\b/g, t);
@@ -259,39 +303,10 @@ function calculateModel(coeffs, length) {
       const val = eval(evalExpr);
       result[t] = isNaN(val) || !isFinite(val) ? 0 : val;
     } catch (e) {
-      console.error("Ошибка в формуле:", evalExpr, e);
       result[t] = 0;
     }
   }
   return result;
-}
-
-function recalculateAndPlot() {
-  if (currentCoeffIndices.length === 0) {
-    plotGraphEmpty();
-    updateMetricsDisplay();
-    return;
-  }
-
-  const hasValidCoeffs =
-    Object.keys(theoryCoeffs).length > 0 &&
-    Object.values(theoryCoeffs).some((v) => v !== 0);
-
-  if (hasValidCoeffs) {
-    xValues = calculateModel(theoryCoeffs, N);
-  } else {
-    const tempCoeffs = {};
-    for (let idx of currentCoeffIndices) tempCoeffs[`a${idx}`] = 0;
-    xValues = calculateModel(tempCoeffs, N);
-  }
-
-  window.lsmValues =
-    estimatedCoeffs && Object.keys(estimatedCoeffs).length > 0
-      ? calculateModel(estimatedCoeffs, N)
-      : [];
-
-  plotGraph();
-  updateMetricsDisplay();
 }
 
 // ==================== МНК ===================================
@@ -323,41 +338,27 @@ function solveLinear(A, b) {
   return res;
 }
 
-function estimateCoefficientsFromData() {
-  if (!currentFormulaRaw || currentCoeffIndices.length === 0) {
-    alert("Введите формулу с коэффициентами a0, a1...");
+function estimateCoefficientsFromDataForModel(modelNum, ySeries) {
+  const rawFormula = modelNum === 1 ? currentFormulaRaw_1 : currentFormulaRaw_2;
+  const indices =
+    modelNum === 1 ? currentCoeffIndices_1 : currentCoeffIndices_2;
+  const x0Val = modelNum === 1 ? x0Value_1 : x0Value_2;
+
+  if (!rawFormula || indices.length === 0 || !ySeries) {
+    if (modelNum === 1) estimatedCoeffs_1 = {};
+    else estimatedCoeffs_2 = {};
     return;
   }
 
-  const rawData = yDataInput.value;
-  if (!rawData.trim()) {
-    estimatedCoeffs = {};
-    renderCoeffPanel();
-    recalculateAndPlot();
-    return;
-  }
-
-  const ySeries = rawData
-    .split(/[\s,;]+/)
-    .map(Number)
-    .filter((v) => !isNaN(v));
-
-  if (ySeries.length < 3) {
-    estimatedCoeffs = {};
-    renderCoeffPanel();
-    recalculateAndPlot();
-    return;
-  }
-
-  const k = currentCoeffIndices.length;
+  const k = indices.length;
   const n = ySeries.length;
   const Z = [];
 
   for (let t = 0; t < n; t++) {
     const row = [];
-    for (let idx of currentCoeffIndices) {
-      let expr = currentFormulaRaw;
-      for (let other of currentCoeffIndices) {
+    for (let idx of indices) {
+      let expr = rawFormula;
+      for (let other of indices) {
         expr = expr.replace(
           new RegExp(`\\ba${other}\\b`, "g"),
           other === idx ? 1 : 0,
@@ -367,7 +368,9 @@ function estimateCoefficientsFromData() {
 
       expr = expr.replace(/x\[t-(\d+)\]/g, (match, lag) => {
         const idxPast = t - parseInt(lag);
-        return idxPast >= 0 && idxPast < ySeries.length ? ySeries[idxPast] : 0;
+        return idxPast >= 0 && idxPast < ySeries.length
+          ? ySeries[idxPast]
+          : x0Val;
       });
       expr = expr.replace(/\bwt\b/g, "0").replace(/\bt\b/g, t);
 
@@ -394,50 +397,54 @@ function estimateCoefficientsFromData() {
 
   const solution = solveLinear(ZTZ, ZTy);
   if (!solution) {
-    alert("Матрица вырождена");
+    if (modelNum === 1) estimatedCoeffs_1 = {};
+    else estimatedCoeffs_2 = {};
     return;
   }
 
-  estimatedCoeffs = {};
-  for (let i = 0; i < currentCoeffIndices.length; i++) {
-    estimatedCoeffs[`a${currentCoeffIndices[i]}`] = solution[i];
+  const targetCoeffs = {};
+  for (let i = 0; i < indices.length; i++) {
+    targetCoeffs[`a${indices[i]}`] = solution[i];
   }
 
-  renderCoeffPanel();
-  recalculateAndPlot();
+  if (modelNum === 1) estimatedCoeffs_1 = targetCoeffs;
+  else estimatedCoeffs_2 = targetCoeffs;
 }
 
-// ==================== ОТРИСОВКА ГРАФИКОВ ====================
-function plotGraph() {
+// ==================== ОТРСОВКА ГРАФИКОВ ====================
+function plotGraphForModel(modelNum) {
   const datasets = [];
+  const grafEl = $(`#graf_${modelNum}`);
+  const xVals = modelNum === 1 ? xValues_1 : xValues_2;
+  const lsmVals = modelNum === 1 ? lsmValues_1 : lsmValues_2;
 
-  if (xValues && xValues.length > 0) {
+  if (xVals && xVals.length > 0) {
     datasets.push({
-      label: "Теоретическая модель",
-      data: xValues.map((v, i) => [i, v]),
+      label: `Теоретическая (Модель ${modelNum})`,
+      data: xVals.map((v, i) => [i, v]),
       color: "#806edc",
       lines: { show: true, lineWidth: 2 },
-      points: { show: true, radius: 2.5 },
+      points: { show: point, radius: 2.5 },
     });
   }
 
-  if (window.lsmValues && window.lsmValues.length > 0) {
+  if (lsmVals && lsmVals.length > 0) {
     datasets.push({
-      label: "Расчетная модель (МНК)",
-      data: window.lsmValues.map((v, i) => [i, v]),
+      label: `Расчетная МНК (Модель ${modelNum})`,
+      data: lsmVals.map((v, i) => [i, v]),
       color: "#ff9800",
       lines: { show: true, lineWidth: 2 },
-      points: { show: true, radius: 2.5 },
+      points: { show: point, radius: 2.5 },
     });
   }
 
   if (datasets.length === 0) {
-    plotGraphEmpty();
+    $.plot(grafEl, []);
     return;
   }
 
   try {
-    $.plot($("#graf"), datasets, {
+    $.plot(grafEl, datasets, {
       grid: { hoverable: true, clickable: true },
       legend: { position: "ne" },
     });
@@ -446,26 +453,98 @@ function plotGraph() {
   }
 }
 
-function plotGraphEmpty() {
-  $.plot($("#graf"), []);
-}
+// ==================== ЕДИНЫЙ ПЕРЕСЧЕТ СИСТЕМЫ ====================
+function recalculateAll() {
+  syncTheoryFromDomForModel(1);
+  syncTheoryFromDomForModel(2);
 
-function onGenerateDirect() {
-  if (nInput) N = parseInt(nInput.value) || 20;
-  syncTheoryFromDom();
-  const generated = calculateModel(theoryCoeffs, N);
-  xValues = generated;
+  const ySeries = getSeriesFromInput();
 
-  if (generatedDataOutput) {
-    generatedDataOutput.textContent = generated
-      .map((v) => v.toFixed(4))
-      .join(", ");
+  // --- БЛОК 1 ---
+  xValues_1 = calculateModelSeries(
+    currentFormulaRaw_1,
+    currentCoeffIndices_1,
+    theoryCoeffs_1,
+    wtCoeffInput_1,
+    x0Value_1,
+    ySeries,
+    N,
+  );
+  if (ySeries) {
+    estimateCoefficientsFromDataForModel(1, ySeries);
+    lsmValues_1 =
+      Object.keys(estimatedCoeffs_1).length > 0
+        ? calculateModelSeries(
+            currentFormulaRaw_1,
+            currentCoeffIndices_1,
+            estimatedCoeffs_1,
+            wtCoeffInput_1,
+            x0Value_1,
+            ySeries,
+            N,
+          )
+        : [];
+  } else {
+    estimatedCoeffs_1 = {};
+    lsmValues_1 = [];
   }
-  plotGraph();
+
+  // --- БЛОК 2 ---
+  xValues_2 = calculateModelSeries(
+    currentFormulaRaw_2,
+    currentCoeffIndices_2,
+    theoryCoeffs_2,
+    wtCoeffInput_2,
+    x0Value_2,
+    ySeries,
+    N,
+  );
+  if (ySeries) {
+    estimateCoefficientsFromDataForModel(2, ySeries);
+    lsmValues_2 =
+      Object.keys(estimatedCoeffs_2).length > 0
+        ? calculateModelSeries(
+            currentFormulaRaw_2,
+            currentCoeffIndices_2,
+            estimatedCoeffs_2,
+            wtCoeffInput_2,
+            x0Value_2,
+            ySeries,
+            N,
+          )
+        : [];
+  } else {
+    estimatedCoeffs_2 = {};
+    lsmValues_2 = [];
+  }
+
+  // Вывод сгенерированных теоретических значений
+  if (generatedDataOutput_1) {
+    generatedDataOutput_1.textContent =
+      xValues_1.length > 0 ? xValues_1.map((v) => v.toFixed(4)).join(", ") : "";
+  }
+  if (generatedDataOutput_2) {
+    generatedDataOutput_2.textContent =
+      xValues_2.length > 0 ? xValues_2.map((v) => v.toFixed(4)).join(", ") : "";
+  }
+
+  // Рендер таблиц и перерисовка графиков
+  renderCoeffPanelForModel(1);
+  renderCoeffPanelForModel(2);
+
+  plotGraphForModel(1);
+  plotGraphForModel(2);
+
   updateMetricsDisplay();
 }
 
-function onFormulaChange() {
+// ==================== ОБРАБОТКА ИЗМЕНЕНИЯ ФОРМУЛЫ ============
+function onFormulaChangeForModel(modelNum) {
+  const formulaInput = modelNum === 1 ? formulaInput_1 : formulaInput_2;
+  const x0Group = modelNum === 1 ? x0Group_1 : x0Group_2;
+  const x0Input = modelNum === 1 ? x0Input_1 : x0Input_2;
+
+  if (!formulaInput) return;
   let userInput = formulaInput.value;
   if (userInput.includes("=")) {
     userInput = userInput.substring(userInput.indexOf("=") + 1).trim();
@@ -478,94 +557,117 @@ function onFormulaChange() {
   if (formulaInput.value !== fullDisplayValue && rawValue !== "") {
     formulaInput.value = fullDisplayValue;
   }
-  currentFormulaRaw = rawValue;
 
   const newIndices = extractIndicesFromRaw(rawValue);
-  const oldTheoryCoeffs = { ...theoryCoeffs };
-  currentCoeffIndices = newIndices;
 
-  for (let idx of currentCoeffIndices) {
-    const key = `a${idx}`;
-    theoryCoeffs[key] =
-      oldTheoryCoeffs[key] !== undefined ? oldTheoryCoeffs[key] : 0;
+  if (modelNum === 1) {
+    currentFormulaRaw_1 = rawValue;
+    const oldTheoryCoeffs = { ...theoryCoeffs_1 };
+    currentCoeffIndices_1 = newIndices;
+    theoryCoeffs_1 = {};
+    for (let idx of currentCoeffIndices_1) {
+      const key = `a${idx}`;
+      theoryCoeffs_1[key] =
+        oldTheoryCoeffs[key] !== undefined ? oldTheoryCoeffs[key] : 0;
+    }
+    estimatedCoeffs_1 = {};
+    lsmValues_1 = [];
+  } else {
+    currentFormulaRaw_2 = rawValue;
+    const oldTheoryCoeffs = { ...theoryCoeffs_2 };
+    currentCoeffIndices_2 = newIndices;
+    theoryCoeffs_2 = {};
+    for (let idx of currentCoeffIndices_2) {
+      const key = `a${idx}`;
+      theoryCoeffs_2[key] =
+        oldTheoryCoeffs[key] !== undefined ? oldTheoryCoeffs[key] : 0;
+    }
+    estimatedCoeffs_2 = {};
+    lsmValues_2 = [];
   }
 
-  const validKeys = new Set(currentCoeffIndices.map((idx) => `a${idx}`));
-  for (let key in theoryCoeffs) {
-    if (!validKeys.has(key)) delete theoryCoeffs[key];
-  }
-
-  estimatedCoeffs = {};
-  window.lsmValues = [];
-
-  renderCoeffPanel();
-  recalculateAndPlot();
+  renderCoeffPanelForModel(modelNum);
 
   if (x0Group) {
-    const hasLag = /x\[t-\d+\]/.test(currentFormulaRaw);
+    const hasLag = /x\[t-\d+\]/.test(rawValue);
     if (hasLag) {
       x0Group.classList.remove("hidden");
     } else {
       x0Group.classList.add("hidden");
-      x0Value = 0;
+      if (modelNum === 1) x0Value_1 = 0;
+      else x0Value_2 = 0;
       if (x0Input) x0Input.value = 0;
     }
   }
 
-  onGenerateDirect();
+  recalculateAll();
 }
 
-// ==================== НАСТРОЙКА ТУМБЛЕРОВ ====================
+// ==================== ТУМБЛЕРЫ И ОБРАБОТЧИКИ СОБЫТИЙ ============
 function initToggles() {
-  if (toggleData && dataContent) {
-    toggleData.addEventListener("change", function () {
-      dataContent.classList.toggle("hidden", !this.checked);
-    });
-  }
-  if (toggleDirect && directContent) {
-    toggleDirect.addEventListener("change", function () {
-      directContent.classList.toggle("hidden", !this.checked);
-    });
-  }
+  document.querySelectorAll(".toggle-switch input").forEach((checkbox) => {
+    function update() {
+      const block = checkbox.closest(".block");
+      if (!block) return;
+      const children = Array.from(block.children).filter(
+        (el) => !el.classList.contains("toggle-header"),
+      );
+      children.forEach((child) => {
+        child.classList.toggle("hidden", !checkbox.checked);
+      });
+    }
+    update();
+    checkbox.addEventListener("change", update);
+  });
 }
 
-// ==================== ОБРАБОТЧИКИ СОБЫТИЙ ====================
-formulaInput.addEventListener("input", onFormulaChange);
+if (formulaInput_1)
+  formulaInput_1.addEventListener("input", () => onFormulaChangeForModel(1));
+if (formulaInput_2)
+  formulaInput_2.addEventListener("input", () => onFormulaChangeForModel(2));
 
 if (nInput) {
   nInput.addEventListener("input", function () {
     N = parseInt(this.value) || 20;
-    recalculateAndPlot();
-    onGenerateDirect();
+    recalculateAll();
   });
 }
 
-if (wtCoeffInput) {
-  wtCoeffInput.addEventListener("input", () => {
-    recalculateAndPlot();
-    onGenerateDirect();
+if (wtCoeffInput_1) wtCoeffInput_1.addEventListener("input", recalculateAll);
+if (wtCoeffInput_2) wtCoeffInput_2.addEventListener("input", recalculateAll);
+
+if (tbody_1) tbody_1.addEventListener("input", recalculateAll);
+if (tbody_2) tbody_2.addEventListener("input", recalculateAll);
+
+if (yDataInput) yDataInput.addEventListener("input", recalculateAll);
+
+if (x0Input_1) {
+  x0Input_1.addEventListener("input", function () {
+    x0Value_1 = parseFloat(this.value) || 0;
+    recalculateAll();
   });
 }
 
-if (tbody) {
-  tbody.addEventListener("input", onGenerateDirect);
-}
-
-if (yDataInput) {
-  yDataInput.addEventListener("input", estimateCoefficientsFromData);
-}
-
-if (x0Input) {
-  x0Input.addEventListener("input", function () {
-    x0Value = parseFloat(this.value) || 0;
-    recalculateAndPlot();
-    onGenerateDirect();
+if (x0Input_2) {
+  x0Input_2.addEventListener("input", function () {
+    x0Value_2 = parseFloat(this.value) || 0;
+    recalculateAll();
   });
 }
 
-if (copyBtn) {
-  copyBtn.addEventListener("click", function () {
-    navigator.clipboard.writeText(generatedDataOutput.textContent || "");
+if (copyBtn_1) {
+  copyBtn_1.addEventListener("click", function () {
+    if (generatedDataOutput_1) {
+      navigator.clipboard.writeText(generatedDataOutput_1.textContent || "");
+    }
+  });
+}
+
+if (copyBtn_2) {
+  copyBtn_2.addEventListener("click", function () {
+    if (generatedDataOutput_2) {
+      navigator.clipboard.writeText(generatedDataOutput_2.textContent || "");
+    }
   });
 }
 
@@ -577,16 +679,16 @@ document.addEventListener("wheel", function () {
 
 // ==================== МЕТРИКИ ================================
 function calculateResiduals() {
-  if (!xValues || xValues.length === 0) return null;
-  if (!window.lsmValues || window.lsmValues.length === 0) return null;
-  if (xValues.length !== window.lsmValues.length) return null;
+  if (!xValues_1 || xValues_1.length === 0) return null;
+  if (!lsmValues_1 || lsmValues_1.length === 0) return null;
+  if (xValues_1.length !== lsmValues_1.length) return null;
 
   const residuals = [];
   let sumAbs = 0;
   let sumSq = 0;
 
-  for (let i = 0; i < xValues.length; i++) {
-    const e = xValues[i] - window.lsmValues[i];
+  for (let i = 0; i < xValues_1.length; i++) {
+    const e = xValues_1[i] - lsmValues_1[i];
     residuals.push(e);
     sumAbs += Math.abs(e);
     sumSq += e * e;
@@ -619,7 +721,14 @@ function updateMetricsDisplay() {
 // ==================== ИНИЦИАЛИЗАЦИЯ =========================
 window.addEventListener("DOMContentLoaded", () => {
   initToggles();
-  formulaInput.value = "";
-  onFormulaChange();
-  plotGraphEmpty();
+
+  if (formulaInput_1) {
+    formulaInput_1.value = "";
+    onFormulaChangeForModel(1);
+  }
+
+  if (formulaInput_2) {
+    formulaInput_2.value = "";
+    onFormulaChangeForModel(2);
+  }
 });
