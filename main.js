@@ -1,39 +1,45 @@
 // ==================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==================
-let currentFormulaRaw = "";
-let currentCoeffIndices = [];
-let xValues = [];
+const COMPONENTS = ["x", "y", "z"];
+
 let N = 20;
 let x0Value = 0;
-
-let theoryCoeffs = {};
-let estimatedCoeffs = {};
 let point = false;
 
-// ==================== ГЕНЕРАЦИЯ ШУМА ========================
-function getNormalRandom() {
-  let u = 0,
-    v = 0;
-  while (u === 0) u = Math.random();
-  while (v === 0) v = Math.random();
-  return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
-}
+const formulas = { x: "", y: "", z: "" };
+const coeffIndices = { x: [], y: [], z: [] };
+const theoryCoeffs = { x: {}, y: {}, z: {} };
+const estimatedCoeffs = { x: {}, y: {}, z: {} };
+const seriesTheory = { x: [], y: [], z: [] };
+const seriesLsm = { x: [], y: [], z: [] };
 
-// ==================== DOM ЭЛЕМЕНТЫ ==========================
-const formulaInput = document.getElementById("formula");
+const formulaInputs = {
+  x: document.getElementById("formula-x"),
+  y: document.getElementById("formula-y"),
+  z: document.getElementById("formula-z"),
+};
+
 const nInput = document.getElementById("N");
-const wtCoeffInput = document.getElementById("Wt");
-const tbody = document.getElementById("coeffs-table-body");
+const wtInput = document.getElementById("Wt");
+const x0Input = document.getElementById("X0");
 const yDataInput = document.getElementById("y-data");
-const generatedDataOutput = document.getElementById("generated-data-output");
-const x0Group = document.getElementById("x0-group");
-const x0Input = document.getElementById("x0-input");
 const copyBtn = document.getElementById("copy_1");
 
-// Тумблеры
+const genOut = {
+  x: document.getElementById("gen-x"),
+  y: document.getElementById("gen-y"),
+  z: document.getElementById("gen-z"),
+};
+
 const toggleData = document.getElementById("toggle-data");
 const toggleDirect = document.getElementById("toggle-direct");
 const dataContent = document.getElementById("data-content");
 const directContent = document.getElementById("direct-content");
+
+const tableBodies = {};
+for (const comp of COMPONENTS) {
+  const table = document.getElementById(`${comp}-table`);
+  tableBodies[comp] = table ? table.querySelector("tbody") : null;
+}
 
 // ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==================
 function toSubscriptNumber(num) {
@@ -45,7 +51,7 @@ function toSubscriptNumber(num) {
 }
 
 function toSuperscriptNumber(num) {
-  const supMap = {
+  const map = {
     0: "⁰",
     1: "¹",
     2: "²",
@@ -61,18 +67,21 @@ function toSuperscriptNumber(num) {
   return num
     .toString()
     .split("")
-    .map((ch) => supMap[ch] || ch)
+    .map((ch) => map[ch] || ch)
     .join("");
 }
 
 function convertToDisplayFormula(formula) {
   let result = formula;
-  result = result.replace(/a(\d+)/g, (m, num) => `a${toSubscriptNumber(num)}`);
   result = result.replace(
-    /x\[t-(\d+)\]/g,
-    (m, offset) => `xₜ₋${toSubscriptNumber(offset)}`,
+    /\b([abc])(\d+)/g,
+    (m, p, num) => `${p}${toSubscriptNumber(num)}`,
   );
-  result = result.replace(/x\[t\]/g, "xₜ");
+  result = result.replace(
+    /\[t-(\d+)\]/g,
+    (m, offset) => `ₜ₋${toSubscriptNumber(offset)}`,
+  );
+  result = result.replace(/\[t\]/g, "ₜ");
   result = result.replace(/\bwt\b/g, "wₜ");
   result = result.replace(/\bpi\b/gi, "π");
   result = result.replace(
@@ -83,7 +92,7 @@ function convertToDisplayFormula(formula) {
 }
 
 function convertToRawFormula(displayFormula) {
-  const decodeSubscript = (subscript) => {
+  const decodeSub = (s) => {
     const map = {
       "₀": "0",
       "₁": "1",
@@ -96,12 +105,12 @@ function convertToRawFormula(displayFormula) {
       "₈": "8",
       "₉": "9",
     };
-    return subscript
+    return s
       .split("")
       .map((ch) => map[ch] || ch)
       .join("");
   };
-  const decodeSuperscript = (sup) => {
+  const decodeSup = (s) => {
     const map = {
       "⁰": "0",
       "¹": "1",
@@ -115,7 +124,7 @@ function convertToRawFormula(displayFormula) {
       "⁹": "9",
       ⁿ: "n",
     };
-    return sup
+    return s
       .split("")
       .map((ch) => map[ch] || ch)
       .join("");
@@ -123,34 +132,31 @@ function convertToRawFormula(displayFormula) {
 
   let result = displayFormula;
   result = result.replace(
-    /xₜ₋([₀₁₂₃₄₅₆₇₈₉]+)/g,
-    (m, sub) => `x[t-${decodeSubscript(sub)}]`,
+    /([xyz])ₜ₋([₀₁₂₃₄₅₆₇₈₉]+)/g,
+    (m, p, sub) => `${p}[t-${decodeSub(sub)}]`,
   );
-  result = result.replace(/xₜ/g, "x[t]");
+  result = result.replace(/([xyz])ₜ/g, (m, p) => `${p}[t]`);
   result = result.replace(/wₜ/g, "wt");
   result = result.replace(
-    /a([₀₁₂₃₄₅₆₇₈₉]+)/g,
-    (m, sub) => `a${decodeSubscript(sub)}`,
+    /\b([abc])([₀₁₂₃₄₅₆₇₈₉]+)/g,
+    (m, p, sub) => `${p}${decodeSub(sub)}`,
   );
   result = result.replace(/π/g, "pi");
   result = result.replace(
     /(\w+|\([^)]+\))([⁰¹²³⁴⁵⁶⁷⁸⁹ⁿ]+)/g,
-    (m, base, sup) => `${base}^${decodeSuperscript(sup)}`,
+    (m, base, sup) => `${base}^${decodeSup(sup)}`,
   );
   return result;
 }
 
-function extractIndicesFromRaw(rawFormula) {
-  const aRegex = /a(\d+)/g;
-  let match,
-    indices = new Set();
-  while ((match = aRegex.exec(rawFormula)) !== null) {
-    indices.add(parseInt(match[1]));
-  }
-  return Array.from(indices).sort((a, b) => a - b);
+function extractIndices(rawFormula, prefix) {
+  const re = new RegExp(`\\b${prefix}(\\d+)\\b`, "g");
+  const set = new Set();
+  let m;
+  while ((m = re.exec(rawFormula)) !== null) set.add(parseInt(m[1]));
+  return Array.from(set).sort((a, b) => a - b);
 }
 
-// Преобразование формулы в JS-выражение
 function formulaToJS(expr) {
   return expr
     .replace(/pi/g, "Math.PI")
@@ -163,104 +169,119 @@ function formulaToJS(expr) {
     .replace(/\^/g, "**");
 }
 
+function getNormalRandom() {
+  let u = 0,
+    v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+}
+
 // ==================== ИНТЕРФЕЙС КОЭФФИЦИЕНТОВ ================
 function renderCoeffPanel() {
-  const container = document.getElementById("coeffs-table-body");
-  if (!container) return;
+  for (const comp of COMPONENTS) {
+    const body = tableBodies[comp];
+    if (!body) continue;
 
-  if (!currentCoeffIndices || currentCoeffIndices.length === 0) {
-    container.innerHTML =
-      '<tr><td colspan="4" style="text-align:center; color:#aaa;">— нет коэффициентов —</td></tr>';
-    return;
-  }
+    const prefix = comp === "x" ? "a" : comp === "y" ? "b" : "c";
+    const indices = coeffIndices[comp];
 
-  container.innerHTML = "";
-  for (let idx of currentCoeffIndices) {
-    const key = `a${idx}`;
-    const theoryVal = theoryCoeffs[key] !== undefined ? theoryCoeffs[key] : 0;
-    const estimatedVal =
-      estimatedCoeffs[key] !== undefined
-        ? estimatedCoeffs[key].toFixed(4)
-        : "—";
-
-    const tr = document.createElement("tr");
-
-    const tdName = document.createElement("td");
-    tdName.innerHTML = `a${toSubscriptNumber(idx.toString())}`;
-    tr.appendChild(tdName);
-
-    const tdTheory = document.createElement("td");
-    const input = document.createElement("input");
-    input.type = "number";
-    input.step = "0.01";
-    input.value = theoryVal;
-    input.setAttribute("data-coeff", key);
-    input.max = "100000";
-    input.addEventListener("input", function () {
-      if (parseFloat(this.value) > 100000) this.value = 100000;
-      theoryCoeffs[key] = parseFloat(this.value) || 0;
-      if (currentFormulaRaw && currentCoeffIndices.length > 0)
-        recalculateAndPlot();
-    });
-    tdTheory.appendChild(input);
-    tr.appendChild(tdTheory);
-
-    const tdEstimated = document.createElement("td");
-    tdEstimated.textContent = estimatedVal;
-    tr.appendChild(tdEstimated);
-
-    const tdDeviation = document.createElement("td");
-    if (estimatedCoeffs[key] !== undefined && theoryCoeffs[key] !== undefined) {
-      let deviation = theoryCoeffs[key] - estimatedCoeffs[key];
-      if (Math.abs(deviation) < 0.0001) deviation = 0;
-      tdDeviation.textContent = deviation.toFixed(4);
-    } else {
-      tdDeviation.textContent = "—";
+    if (indices.length === 0) {
+      body.innerHTML =
+        '<tr><td colspan="3" style="text-align:center;color:#aaa;">— нет коэффициентов —</td></tr>';
+      continue;
     }
-    tr.appendChild(tdDeviation);
 
-    container.appendChild(tr);
+    body.innerHTML = "";
+    for (const idx of indices) {
+      const key = `${prefix}${idx}`;
+      const theoryVal = theoryCoeffs[comp][key] ?? 0;
+      const estVal =
+        estimatedCoeffs[comp][key] !== undefined
+          ? estimatedCoeffs[comp][key].toFixed(4)
+          : "—";
+
+      const tr = document.createElement("tr");
+
+      const tdName = document.createElement("td");
+      tdName.innerHTML = `${prefix}${toSubscriptNumber(idx.toString())}`;
+      tr.appendChild(tdName);
+
+      const tdTheory = document.createElement("td");
+      const input = document.createElement("input");
+      input.type = "number";
+      input.step = "0.01";
+      input.value = theoryVal;
+      input.max = "100000";
+      input.dataset.comp = comp;
+      input.dataset.key = key;
+      input.addEventListener("input", function () {
+        if (parseFloat(this.value) > 100000) this.value = 100000;
+        theoryCoeffs[comp][key] = parseFloat(this.value) || 0;
+        recalculateAndPlot();
+      });
+      tdTheory.appendChild(input);
+      tr.appendChild(tdTheory);
+
+      const tdEst = document.createElement("td");
+      tdEst.textContent = estVal;
+      tr.appendChild(tdEst);
+
+      body.appendChild(tr);
+    }
   }
 }
 
 function syncTheoryFromDom() {
-  const container = document.getElementById("coeffs-table-body");
-  if (!container) return;
-  container.querySelectorAll("input[data-coeff]").forEach((inp) => {
-    theoryCoeffs[inp.getAttribute("data-coeff")] = parseFloat(inp.value) || 0;
-  });
+  for (const comp of COMPONENTS) {
+    const body = tableBodies[comp];
+    if (!body) continue;
+    body.querySelectorAll("input[data-key]").forEach((inp) => {
+      theoryCoeffs[comp][inp.dataset.key] = parseFloat(inp.value) || 0;
+    });
+  }
 }
 
 // ==================== ВЫЧИСЛЕНИЯ И МОДЕЛИРОВАНИЕ ============
-function calculateModel(coeffs, length) {
-  if (!currentFormulaRaw || currentCoeffIndices.length === 0) return [];
-
-  const baseExpr = formulaToJS(currentFormulaRaw);
+function calculateComponent(comp, coeffs, length, context) {
+  const raw = formulas[comp];
+  if (!raw) return [];
+  const baseExpr = formulaToJS(raw);
+  const wtMul = wtInput ? parseFloat(wtInput.value) || 1 : 1;
   const result = [];
-  const wtMultiplier = wtCoeffInput ? parseFloat(wtCoeffInput.value) || 1 : 1;
 
   for (let t = 0; t < length; t++) {
-    let evalExpr = baseExpr;
+    let expr = baseExpr;
 
-    evalExpr = evalExpr.replace(/x\[t-(\d+)\]/g, (match, lag) => {
-      const idx = t - parseInt(lag);
-      return idx >= 0 && idx < result.length ? result[idx] : x0Value;
-    });
-
-    evalExpr = evalExpr.replace(/\bt\b/g, t);
-
-    for (let [key, val] of Object.entries(coeffs)) {
-      evalExpr = evalExpr.replace(new RegExp(`\\b${key}\\b`, "g"), val);
+    for (const other of COMPONENTS) {
+      expr = expr.replace(
+        new RegExp(`\\b${other}\\[t-(\\d+)\\]`, "g"),
+        (m, lag) => {
+          const idx = t - parseInt(lag);
+          const arr = context[other] || [];
+          if (idx >= 0 && idx < arr.length) return arr[idx];
+          return other === "x" ? x0Value : 0;
+        },
+      );
+      expr = expr.replace(new RegExp(`\\b${other}\\[t\\]`, "g"), () => {
+        const arr = context[other] || [];
+        return t < arr.length ? arr[t] : 0;
+      });
     }
 
-    const wt = getNormalRandom() * wtMultiplier;
-    evalExpr = evalExpr.replace(/\bwt\b/g, wt);
+    expr = expr.replace(/\bt\b/g, t);
+
+    for (const [key, val] of Object.entries(coeffs)) {
+      expr = expr.replace(new RegExp(`\\b${key}\\b`, "g"), val);
+    }
+
+    const wt = getNormalRandom() * wtMul;
+    expr = expr.replace(/\bwt\b/g, wt);
 
     try {
-      const val = eval(evalExpr);
-      result[t] = isNaN(val) || !isFinite(val) ? 0 : val;
-    } catch (e) {
-      console.error("Ошибка в формуле:", evalExpr, e);
+      const v = eval(expr);
+      result[t] = isNaN(v) || !isFinite(v) ? 0 : v;
+    } catch {
       result[t] = 0;
     }
   }
@@ -268,28 +289,29 @@ function calculateModel(coeffs, length) {
 }
 
 function recalculateAndPlot() {
-  if (currentCoeffIndices.length === 0) {
+  const hasAny = COMPONENTS.some((c) => coeffIndices[c].length > 0);
+  if (!hasAny) {
     plotGraphEmpty();
     updateMetricsDisplay();
     return;
   }
 
-  const hasValidCoeffs =
-    Object.keys(theoryCoeffs).length > 0 &&
-    Object.values(theoryCoeffs).some((v) => v !== 0);
+  seriesTheory.x = calculateComponent("x", theoryCoeffs.x, N, seriesTheory);
+  seriesTheory.y = calculateComponent("y", theoryCoeffs.y, N, seriesTheory);
+  seriesTheory.z = calculateComponent("z", theoryCoeffs.z, N, seriesTheory);
 
-  if (hasValidCoeffs) {
-    xValues = calculateModel(theoryCoeffs, N);
+  const hasEst = COMPONENTS.some(
+    (c) => Object.keys(estimatedCoeffs[c]).length > 0,
+  );
+  if (hasEst) {
+    seriesLsm.x = calculateComponent("x", estimatedCoeffs.x, N, seriesLsm);
+    seriesLsm.y = calculateComponent("y", estimatedCoeffs.y, N, seriesLsm);
+    seriesLsm.z = calculateComponent("z", estimatedCoeffs.z, N, seriesLsm);
   } else {
-    const tempCoeffs = {};
-    for (let idx of currentCoeffIndices) tempCoeffs[`a${idx}`] = 0;
-    xValues = calculateModel(tempCoeffs, N);
+    seriesLsm.x = [];
+    seriesLsm.y = [];
+    seriesLsm.z = [];
   }
-
-  window.lsmValues =
-    estimatedCoeffs && Object.keys(estimatedCoeffs).length > 0
-      ? calculateModel(estimatedCoeffs, N)
-      : [];
 
   plotGraph();
   updateMetricsDisplay();
@@ -298,7 +320,7 @@ function recalculateAndPlot() {
 // ==================== МНК ===================================
 function solveLinear(A, b) {
   const n = b.length;
-  const M = A.map((row) => [...row]);
+  const M = A.map((r) => [...r]);
   const v = [...b];
 
   for (let i = 0; i < n; i++) {
@@ -309,69 +331,81 @@ function solveLinear(A, b) {
     [v[i], v[max]] = [v[max], v[i]];
     if (Math.abs(M[i][i]) < 1e-12) return null;
     for (let j = i + 1; j < n; j++) {
-      const factor = M[j][i] / M[i][i];
-      v[j] -= factor * v[i];
-      for (let k = i; k < n; k++) M[j][k] -= factor * M[i][k];
+      const f = M[j][i] / M[i][i];
+      v[j] -= f * v[i];
+      for (let k = i; k < n; k++) M[j][k] -= f * M[i][k];
     }
   }
 
   const res = new Array(n);
   for (let i = n - 1; i >= 0; i--) {
-    let sum = 0;
-    for (let j = i + 1; j < n; j++) sum += M[i][j] * res[j];
-    res[i] = (v[i] - sum) / M[i][i];
+    let s = 0;
+    for (let j = i + 1; j < n; j++) s += M[i][j] * res[j];
+    res[i] = (v[i] - s) / M[i][i];
   }
   return res;
 }
 
-function estimateCoefficientsFromData() {
-  if (!currentFormulaRaw || currentCoeffIndices.length === 0) {
-    alert("Введите формулу с коэффициентами a0, a1...");
+function parseDataBlock(text) {
+  const out = { x: [], y: [], z: [] };
+  const lines = text
+    .split(/\n+/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  for (const line of lines) {
+    const m = line.match(/^([xyz])\s*[:=]\s*(.+)$/i);
+    if (!m) continue;
+    const comp = m[1].toLowerCase();
+    out[comp] = m[2]
+      .split(/[\s,;]+/)
+      .map(Number)
+      .filter((v) => !isNaN(v));
+  }
+  return out;
+}
+
+function estimateOneComponent(comp, data) {
+  const raw = formulas[comp];
+  const indices = coeffIndices[comp];
+  if (!raw || indices.length === 0) return;
+
+  const ySeries = data[comp];
+  if (!ySeries || ySeries.length < 3) {
+    estimatedCoeffs[comp] = {};
     return;
   }
 
-  const rawData = yDataInput.value;
-  if (!rawData.trim()) {
-    estimatedCoeffs = {};
-    renderCoeffPanel();
-    recalculateAndPlot();
-    return;
-  }
-
-  const ySeries = rawData
-    .split(/[\s,;]+/)
-    .map(Number)
-    .filter((v) => !isNaN(v));
-
-  if (ySeries.length < 3) {
-    estimatedCoeffs = {};
-    renderCoeffPanel();
-    recalculateAndPlot();
-    return;
-  }
-
-  const k = currentCoeffIndices.length;
+  const prefix = comp === "x" ? "a" : comp === "y" ? "b" : "c";
+  const k = indices.length;
   const n = ySeries.length;
   const Z = [];
 
   for (let t = 0; t < n; t++) {
     const row = [];
-    for (let idx of currentCoeffIndices) {
-      let expr = currentFormulaRaw;
-      for (let other of currentCoeffIndices) {
+    for (const idx of indices) {
+      let expr = raw;
+      for (const other of indices) {
         expr = expr.replace(
-          new RegExp(`\\ba${other}\\b`, "g"),
+          new RegExp(`\\b${prefix}${other}\\b`, "g"),
           other === idx ? 1 : 0,
         );
       }
-      expr = formulaToJS(expr);
-
-      expr = expr.replace(/x\[t-(\d+)\]/g, (match, lag) => {
-        const idxPast = t - parseInt(lag);
-        return idxPast >= 0 && idxPast < ySeries.length ? ySeries[idxPast] : 0;
-      });
+      for (const oc of COMPONENTS) {
+        expr = expr.replace(
+          new RegExp(`\\b${oc}\\[t-(\\d+)\\]`, "g"),
+          (m, lag) => {
+            const pi = t - parseInt(lag);
+            const arr = data[oc] || [];
+            return pi >= 0 && pi < arr.length ? arr[pi] : 0;
+          },
+        );
+        expr = expr.replace(new RegExp(`\\b${oc}\\[t\\]`, "g"), () => {
+          const arr = data[oc] || [];
+          return t < arr.length ? arr[t] : 0;
+        });
+      }
       expr = expr.replace(/\bwt\b/g, "0").replace(/\bt\b/g, t);
-
+      expr = formulaToJS(expr);
       try {
         row.push(eval(expr));
       } catch {
@@ -387,23 +421,25 @@ function estimateCoefficientsFromData() {
   const ZTy = Array(k).fill(0);
 
   for (let i = 0; i < k; i++) {
-    for (let j = 0; j < k; j++) {
+    for (let j = 0; j < k; j++)
       for (let m = 0; m < n; m++) ZTZ[i][j] += Z[m][i] * Z[m][j];
-    }
     for (let m = 0; m < n; m++) ZTy[i] += Z[m][i] * ySeries[m];
   }
 
-  const solution = solveLinear(ZTZ, ZTy);
-  if (!solution) {
-    alert("Матрица вырождена");
-    return;
-  }
+  const sol = solveLinear(ZTZ, ZTy);
+  if (!sol) return;
 
-  estimatedCoeffs = {};
-  for (let i = 0; i < currentCoeffIndices.length; i++) {
-    estimatedCoeffs[`a${currentCoeffIndices[i]}`] = solution[i];
-  }
+  estimatedCoeffs[comp] = {};
+  for (let i = 0; i < indices.length; i++)
+    estimatedCoeffs[comp][`${prefix}${indices[i]}`] = sol[i];
+}
 
+function estimateCoefficientsFromData() {
+  const data = parseDataBlock(yDataInput.value);
+  for (const comp of COMPONENTS) {
+    estimatedCoeffs[comp] = {};
+    estimateOneComponent(comp, data);
+  }
   renderCoeffPanel();
   recalculateAndPlot();
 }
@@ -411,25 +447,31 @@ function estimateCoefficientsFromData() {
 // ==================== ОТРИСОВКА ГРАФИКОВ ====================
 function plotGraph() {
   const datasets = [];
+  const colors = {
+    x: { theory: "#806edc", lsm: "#ff9800" },
+    y: { theory: "#4da74d", lsm: "#cb4b4b" },
+    z: { theory: "#2196f3", lsm: "#e91e63" },
+  };
 
-  if (xValues && xValues.length > 0) {
-    datasets.push({
-      label: "Теоретическая модель",
-      data: xValues.map((v, i) => [i, v]),
-      color: "#806edc",
-      lines: { show: true, lineWidth: 2 },
-      points: { show: point, radius: 2.5 },
-    });
-  }
-
-  if (window.lsmValues && window.lsmValues.length > 0) {
-    datasets.push({
-      label: "Расчетная модель (МНК)",
-      data: window.lsmValues.map((v, i) => [i, v]),
-      color: "#ff9800",
-      lines: { show: true, lineWidth: 2 },
-      points: { show: point, radius: 2.5 },
-    });
+  for (const comp of COMPONENTS) {
+    if (seriesTheory[comp] && seriesTheory[comp].length) {
+      datasets.push({
+        label: `Теор. ${comp}[t]`,
+        data: seriesTheory[comp].map((v, i) => [i, v]),
+        color: colors[comp].theory,
+        lines: { show: true, lineWidth: 2 },
+        points: { show: point, radius: 2.5 },
+      });
+    }
+    if (seriesLsm[comp] && seriesLsm[comp].length) {
+      datasets.push({
+        label: `МНК ${comp}[t]`,
+        data: seriesLsm[comp].map((v, i) => [i, v]),
+        color: colors[comp].lsm,
+        lines: { show: true, lineWidth: 2, dashes: [5, 3] },
+        points: { show: point, radius: 2.5 },
+      });
+    }
   }
 
   if (datasets.length === 0) {
@@ -451,124 +493,96 @@ function plotGraphEmpty() {
   $.plot($("#graf"), []);
 }
 
+// ==================== ГЕНЕРАЦИЯ ==============================
 function onGenerateDirect() {
-  if (nInput) N = parseInt(nInput.value) || 20;
+  N = parseInt(nInput?.value) || 20;
   syncTheoryFromDom();
-  const generated = calculateModel(theoryCoeffs, N);
-  xValues = generated;
+  seriesTheory.x = calculateComponent("x", theoryCoeffs.x, N, seriesTheory);
+  seriesTheory.y = calculateComponent("y", theoryCoeffs.y, N, seriesTheory);
+  seriesTheory.z = calculateComponent("z", theoryCoeffs.z, N, seriesTheory);
 
-  if (generatedDataOutput) {
-    generatedDataOutput.textContent = generated
-      .map((v) => v.toFixed(4))
-      .join(", ");
+  for (const comp of COMPONENTS) {
+    if (genOut[comp]) {
+      genOut[comp].textContent = seriesTheory[comp]
+        .map((v) => v.toFixed(4))
+        .join(", ");
+    }
   }
   plotGraph();
   updateMetricsDisplay();
 }
 
-function onFormulaChange() {
-  let userInput = formulaInput.value;
-  if (userInput.includes("=")) {
+// ==================== СМЕНА ФОРМУЛ ==========================
+function onFormulaChange(comp) {
+  const input = formulaInputs[comp];
+  let userInput = input.value;
+  if (userInput.includes("="))
     userInput = userInput.substring(userInput.indexOf("=") + 1).trim();
+
+  const raw = convertToRawFormula(userInput);
+  const display = convertToDisplayFormula(raw);
+  const full = `${comp}ₜ = ` + display;
+
+  if (input.value !== full && raw !== "") input.value = full;
+  formulas[comp] = raw;
+
+  const prefix = comp === "x" ? "a" : comp === "y" ? "b" : "c";
+  const newIdx = extractIndices(raw, prefix);
+  const old = { ...theoryCoeffs[comp] };
+  coeffIndices[comp] = newIdx;
+
+  theoryCoeffs[comp] = {};
+  for (const idx of newIdx) {
+    const key = `${prefix}${idx}`;
+    theoryCoeffs[comp][key] = old[key] ?? 0;
   }
 
-  const rawValue = convertToRawFormula(userInput);
-  const displayValue = convertToDisplayFormula(rawValue);
-  const fullDisplayValue = "xₜ = " + displayValue;
-
-  if (formulaInput.value !== fullDisplayValue && rawValue !== "") {
-    formulaInput.value = fullDisplayValue;
-  }
-  currentFormulaRaw = rawValue;
-
-  const newIndices = extractIndicesFromRaw(rawValue);
-  const oldTheoryCoeffs = { ...theoryCoeffs };
-  currentCoeffIndices = newIndices;
-
-  for (let idx of currentCoeffIndices) {
-    const key = `a${idx}`;
-    theoryCoeffs[key] =
-      oldTheoryCoeffs[key] !== undefined ? oldTheoryCoeffs[key] : 0;
-  }
-
-  const validKeys = new Set(currentCoeffIndices.map((idx) => `a${idx}`));
-  for (let key in theoryCoeffs) {
-    if (!validKeys.has(key)) delete theoryCoeffs[key];
-  }
-
-  estimatedCoeffs = {};
-  window.lsmValues = [];
-
+  estimatedCoeffs[comp] = {};
   renderCoeffPanel();
   recalculateAndPlot();
-
-  if (x0Group) {
-    const hasLag = /x\[t-\d+\]/.test(currentFormulaRaw);
-    if (hasLag) {
-      x0Group.classList.remove("hidden");
-    } else {
-      x0Group.classList.add("hidden");
-      x0Value = 0;
-      if (x0Input) x0Input.value = 0;
-    }
-  }
-
   onGenerateDirect();
 }
 
-// ==================== НАСТРОЙКА ТУМБЛЕРОВ ====================
+// ==================== ТУМБЛЕРЫ ==============================
 function initToggles() {
-  if (toggleData && dataContent) {
-    toggleData.addEventListener("change", function () {
-      dataContent.classList.toggle("hidden", !this.checked);
-    });
-  }
-  if (toggleDirect && directContent) {
-    toggleDirect.addEventListener("change", function () {
-      directContent.classList.toggle("hidden", !this.checked);
-    });
-  }
-}
-
-// ==================== ОБРАБОТЧИКИ СОБЫТИЙ ====================
-formulaInput.addEventListener("input", onFormulaChange);
-
-if (nInput) {
-  nInput.addEventListener("input", function () {
-    N = parseInt(this.value) || 20;
-    recalculateAndPlot();
-    onGenerateDirect();
+  toggleData?.addEventListener("change", function () {
+    dataContent.classList.toggle("hidden", !this.checked);
+  });
+  toggleDirect?.addEventListener("change", function () {
+    directContent.classList.toggle("hidden", !this.checked);
   });
 }
 
-if (wtCoeffInput) {
-  wtCoeffInput.addEventListener("input", () => {
-    recalculateAndPlot();
-    onGenerateDirect();
-  });
-}
+// ==================== ОБРАБОТЧИКИ ===========================
+COMPONENTS.forEach((comp) => {
+  formulaInputs[comp].addEventListener("input", () => onFormulaChange(comp));
+});
 
-if (tbody) {
-  tbody.addEventListener("input", onGenerateDirect);
-}
+nInput?.addEventListener("input", function () {
+  N = parseInt(this.value) || 20;
+  recalculateAndPlot();
+  onGenerateDirect();
+});
 
-if (yDataInput) {
-  yDataInput.addEventListener("input", estimateCoefficientsFromData);
-}
+wtInput?.addEventListener("input", () => {
+  recalculateAndPlot();
+  onGenerateDirect();
+});
 
-if (x0Input) {
-  x0Input.addEventListener("input", function () {
-    x0Value = parseFloat(this.value) || 0;
-    recalculateAndPlot();
-    onGenerateDirect();
-  });
-}
+yDataInput?.addEventListener("input", estimateCoefficientsFromData);
 
-if (copyBtn) {
-  copyBtn.addEventListener("click", function () {
-    navigator.clipboard.writeText(generatedDataOutput.textContent || "");
-  });
-}
+x0Input?.addEventListener("input", function () {
+  x0Value = parseFloat(this.value) || 0;
+  recalculateAndPlot();
+  onGenerateDirect();
+});
+
+copyBtn?.addEventListener("click", function () {
+  const text = COMPONENTS.map(
+    (c) => `${c}: ${seriesTheory[c].map((v) => v.toFixed(4)).join(", ")}`,
+  ).join("\n");
+  navigator.clipboard.writeText(text);
+});
 
 document.addEventListener("wheel", function () {
   if (document.activeElement && document.activeElement.type === "number") {
@@ -576,51 +590,43 @@ document.addEventListener("wheel", function () {
   }
 });
 
-// ==================== МЕТРИКИ ================================
-function calculateResiduals() {
-  if (!xValues || xValues.length === 0) return null;
-  if (!window.lsmValues || window.lsmValues.length === 0) return null;
-  if (xValues.length !== window.lsmValues.length) return null;
-
-  const residuals = [];
-  let sumAbs = 0;
-  let sumSq = 0;
-
-  for (let i = 0; i < xValues.length; i++) {
-    const e = xValues[i] - window.lsmValues[i];
-    residuals.push(e);
-    sumAbs += Math.abs(e);
-    sumSq += e * e;
-  }
-
-  const n = residuals.length;
-  return {
-    residuals,
-    mae: sumAbs / n,
-    rmse: Math.sqrt(sumSq / n),
-  };
-}
-
+// ==================== МЕТРИКИ ===============================
 function updateMetricsDisplay() {
-  const maeEl = document.getElementById("mae-output");
-  const rmseEl = document.getElementById("rmse-output");
-  if (!maeEl || !rmseEl) return;
+  for (const comp of COMPONENTS) {
+    const maeEl = document.getElementById(`mae-${comp}`);
+    const rmseEl = document.getElementById(`rmse-${comp}`);
+    if (!maeEl || !rmseEl) continue;
 
-  const result = calculateResiduals();
-  if (!result) {
-    maeEl.textContent = "—";
-    rmseEl.textContent = "—";
-    return;
+    const th = seriesTheory[comp];
+    const ls = seriesLsm[comp];
+    if (
+      !th ||
+      !ls ||
+      th.length === 0 ||
+      ls.length === 0 ||
+      th.length !== ls.length
+    ) {
+      maeEl.textContent = "—";
+      rmseEl.textContent = "—";
+      continue;
+    }
+
+    let sumAbs = 0,
+      sumSq = 0;
+    for (let i = 0; i < th.length; i++) {
+      const e = th[i] - ls[i];
+      sumAbs += Math.abs(e);
+      sumSq += e * e;
+    }
+    const n = th.length;
+    maeEl.textContent = (sumAbs / n).toFixed(4);
+    rmseEl.textContent = Math.sqrt(sumSq / n).toFixed(4);
   }
-
-  maeEl.textContent = result.mae.toFixed(4);
-  rmseEl.textContent = result.rmse.toFixed(4);
 }
 
 // ==================== ИНИЦИАЛИЗАЦИЯ =========================
 window.addEventListener("DOMContentLoaded", () => {
   initToggles();
-  formulaInput.value = "";
-  onFormulaChange();
+  COMPONENTS.forEach((c) => (formulaInputs[c].value = ""));
   plotGraphEmpty();
 });

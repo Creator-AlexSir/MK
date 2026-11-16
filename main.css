@@ -48,8 +48,8 @@ footer {
   margin-top: 40px;
 }
 
-/* ------- Общая настройка блоков ------- */
-.block {
+/* ------- Карты ------- */
+.card {
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
@@ -58,19 +58,46 @@ footer {
   transition: all 0.2s;
 }
 
-.block h3 {
-  margin-top: 0;
-  margin-bottom: 0;
+.card h3 {
+  margin-top: 18px;
+  margin-bottom: 10px;
   font-weight: 500;
   color: #2c3e2f;
   font-size: 1.3rem;
 }
 
-/* ------- Формула ------- */
+.card h3:first-of-type {
+  margin-top: 0;
+}
+
+/* ------- Параметры ------- */
+.param {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.param label {
+  font-size: 20px;
+  font-weight: normal;
+}
+
+.param input {
+  width: 80px;
+  padding: 8px 10px;
+  font-size: 20px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fcfffd;
+  transition: 0.2s;
+}
+
+/* ------- Формулы ------- */
 .formula-group {
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   gap: 15px;
   width: 100%;
   flex-wrap: wrap;
@@ -89,125 +116,32 @@ footer {
 }
 
 /* ------- Коэффициенты ------- */
-.N-group,
-.Wt-group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.N-group label,
-.Wt-group label {
-  font-size: 20px;
-  font-weight: normal;
-}
-
-.N-group input,
-.Wt-group input,
-#x0-input {
-  width: 80px;
-  padding: 8px 10px;
-  font-size: 20px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background: #fcfffd;
-  transition: 0.2s;
-}
-
-/* ------- Панель коэффициентов и графика ------- */
-.general-panel {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 24px;
-  width: 100%;
+.coeff-group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
   margin-top: 20px;
 }
 
-/* ------- Кнопки под графиком ------- */
-.button-group {
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-start;
-  gap: 12px;
-  width: 100%;
-  margin-top: 10px;
-}
-
-#x0-group {
-  margin-right: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 5px;
-}
-
-#x0-group label {
-  font-size: 20px;
-  font-weight: normal;
-}
-
-/* ------- Блок метрик качества ------- */
-.metrics-block {
-  margin: 20px 0 0 auto;
-  padding: 12px;
-  background: #fcfffd;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+.coeff-panel {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  width: 60%;
-}
-
-.metrics-block h4 {
-  margin: 0 0 10px 0;
-  font-weight: 500;
-  font-size: 1.1rem;
-  text-align: center;
-}
-
-.metrics-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.metrics-table th,
-.metrics-table td {
-  padding: 6px 10px;
-  border-bottom: 1px solid #ddd;
-  text-align: center;
-  font-size: 16px;
-}
-
-.metrics-table th {
-  font-weight: normal;
-  background-color: #f0f2f0;
-}
-
-/* ------- Панель коэффициентов модели ------- */
-.coeff-panel {
-  width: 35%;
-  min-width: 280px;
-  margin-top: 16px;
+  gap: 10px;
+  padding: 12px 14px;
   background: #fcfffd;
-  border-radius: 8px;
-  padding: 10px;
   border: 1px solid #ccc;
+  border-radius: 8px;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .coeff-panel h4 {
-  width: 100%;
-  margin-top: 0;
-  margin-bottom: 6px;
+  margin: 0;
   font-weight: 500;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
+  text-align: center;
+  font-size: 1.05rem;
 }
 
-/* ------- Таблица коэффициентов ------- */
 .coeff-table {
   width: 100%;
   table-layout: fixed;
@@ -215,36 +149,38 @@ footer {
 }
 
 .coeff-table th {
-  padding: 5px 2px;
+  padding: 6px 4px;
   border-bottom: 1px solid #ddd;
   text-align: center;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: normal;
   background-color: #f0f2f0;
 }
 
 .coeff-table td {
-  padding: 5px 2px;
-  border-bottom: 1px solid #ddd;
+  padding: 4px 4px;
+  border-bottom: 1px solid #eee;
   text-align: center;
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .coeff-table input {
   width: 100%;
-  max-width: 60px;
-  padding: 8px 0;
+  max-width: 70px;
+  padding: 6px 0;
   border-radius: 5px;
   border: 1px solid #ddd;
   text-align: center;
-  transition: 0.2s;
-  font-size: 16px;
+  font-size: 15px;
 }
 
 /* ------- График ------- */
+.graph-group {
+  margin-top: 22px;
+}
+
 .graph-panel {
-  width: calc(65% - 24px);
-  min-width: 300px;
+  width: 100%;
 }
 
 .graph-panel h3 {
@@ -377,4 +313,11 @@ input::-webkit-inner-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
+}
+
+/* ------- Медиа-запрос ------- */
+@media (max-width: 820px) {
+  .coeff-group {
+    grid-template-columns: 1fr;
+  }
 }
