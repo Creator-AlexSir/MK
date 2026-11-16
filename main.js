@@ -7,6 +7,7 @@ let x0Value = 0;
 
 let theoryCoeffs = {};
 let estimatedCoeffs = {};
+let point = false;
 
 // ==================== ГЕНЕРАЦИЯ ШУМА ========================
 function getNormalRandom() {
@@ -417,7 +418,7 @@ function plotGraph() {
       data: xValues.map((v, i) => [i, v]),
       color: "#806edc",
       lines: { show: true, lineWidth: 2 },
-      points: { show: true, radius: 2.5 },
+      points: { show: point, radius: 2.5 },
     });
   }
 
@@ -427,7 +428,7 @@ function plotGraph() {
       data: window.lsmValues.map((v, i) => [i, v]),
       color: "#ff9800",
       lines: { show: true, lineWidth: 2 },
-      points: { show: true, radius: 2.5 },
+      points: { show: point, radius: 2.5 },
     });
   }
 
