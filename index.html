@@ -57,29 +57,42 @@
             id="formula-x"
             class="formula-input"
             placeholder="x[t] ="
-            list="models"
+            list="models-x"
           />
           <input
             type="text"
             id="formula-y"
             class="formula-input"
             placeholder="y[t] ="
-            list="models"
+            list="models-y"
           />
           <input
             type="text"
             id="formula-z"
             class="formula-input"
             placeholder="z[t] ="
-            list="models"
+            list="models-z"
           />
-          <datalist id="models">
+
+          <datalist id="models-x">
             <option value="x[t] = a0 + a1*t + a2*t^2"></option>
             <option value="x[t] = a0 + a1*t^2"></option>
             <option value="x[t] = a0 + a1 * sqrt(t)"></option>
             <option value="x[t] = a0 + a1 * x[t-1] + a2 * x[t-2]"></option>
+          </datalist>
+
+          <datalist id="models-y">
+            <option value="y[t] = b0 + b1*t + b2*t^2"></option>
             <option value="y[t] = b0 + b1*x[t] + b2*t"></option>
+            <option value="y[t] = b0 + b1*x[t] + b2*x[t-1]"></option>
+            <option value="y[t] = b0 + b1*y[t-1] + b2*x[t]"></option>
+          </datalist>
+
+          <datalist id="models-z">
+            <option value="z[t] = c0 + c1*t + c2*t^2"></option>
             <option value="z[t] = c0 + c1*y[t] + c2*x[t]"></option>
+            <option value="z[t] = c0 + c1*x[t] + c2*y[t]"></option>
+            <option value="z[t] = c0 + c1*z[t-1] + c2*y[t]"></option>
           </datalist>
         </div>
 
