@@ -3,172 +3,773 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Стохастическая модель</title>
+    <meta
+      name="description"
+      content="Стохастические временные ряды: модели x(t), y(t), z(t), МНК, метод Рунге–Кутта и система Лоренца"
+    />
+    <title>Стохастические временные ряды</title>
     <link href="main.css" rel="stylesheet" />
   </head>
   <body>
-    <header>
-      <h1>Стохастическая модель</h1>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none">
+              <path
+                d="M3 22c3.5 0 3.5-12 7-12s3.5 16 7 16 3.5-18 7-18 3.5 10 5 10"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+              />
+            </svg>
+          </span>
+          <div class="brand-text">
+            <h1>Стохастические временные ряды</h1>
+            <p>Модели xₜ · yₜ · zₜ · МНК · Рунге–Кутта · Лоренц</p>
+          </div>
+        </div>
+
+        <nav class="tabs" id="tabs" role="tablist" aria-label="Разделы программы">
+          <button
+            class="tab is-active"
+            role="tab"
+            aria-selected="true"
+            data-tab="series"
+          >
+            Временные ряды
+          </button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="lorenz">
+            Система Лоренца
+          </button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="help">
+            Справка
+          </button>
+        </nav>
+      </div>
     </header>
 
-    <!-- Уравнение -->
-    <article>
-      <div class="block">
-        <h3>Уравнение модели</h3>
-
-        <div class="formula-group">
-          <input
-            type="text"
-            id="formula"
-            class="formula-input"
-            placeholder="Введите формулу"
-            list="models"
-          />
-          <datalist id="models">
-            <option value="x[t] = a0 + a1*t + a2*t^2"></option>
-            <option value="x[t] = a0 + a1*t^2"></option>
-            <option value="x[t] = a0 + a1 * sqrt(t)"></option>
-            <option value="x[t] = a0 + a1 * x[t-1] + a2 * x[t-2]"></option>
-          </datalist>
-          <!-- Коэффициент N -->
-          <div class="N-group">
-            <label for="N">N:</label>
-            <input
-              type="number"
-              id="N"
-              class="N-input"
-              value="20"
-              max="1000"
-              oninput="if (parseFloat(this.value) > 1000) this.value = 1000;"
-            />
-          </div>
-
-          <!-- Коэффициент Wt -->
-          <div class="Wt-group">
-            <label for="Wt">Wₜ:</label>
-            <input
-              type="number"
-              id="Wt"
-              class="Wt-input"
-              value="1"
-              step="0.1"
-              max="90000"
-              oninput="if (parseFloat(this.value) > 90000) this.value = 90000;"
-            />
-          </div>
-        </div>
-
-        <!-- Панель объединения коэффициентов и графика -->
-        <div class="general-panel">
-          <!-- Панель коэффициентов модели -->
-          <div class="coeff-panel">
-            <h4>Коэффициенты модели</h4>
-
-            <table class="coeff-table">
-              <thead>
-                <tr>
-                  <th>Коэфф.</th>
-                  <th>Теор.</th>
-                  <th>Расчетный</th>
-                  <th>Отклонение</th>
-                </tr>
-              </thead>
-              <tbody id="coeffs-table-body"></tbody>
-            </table>
-          </div>
-
-          <!-- График -->
-          <div class="graph-panel">
-            <h3>График модели</h3>
-            <div id="graf" class="graf"></div>
-
-            <!-- Область под графиком -->
-            <div class="button-group">
-              <div id="x0-group" class="hidden">
-                <label for="x0-input">X₀:</label>
-                <input
-                  type="number"
-                  id="x0-input"
-                  class="N-input"
-                  value="0"
-                  step="0.1"
-                  max="90000"
-                  oninput="
-                    if (parseFloat(this.value) > 90000) this.value = 90000;
-                  "
-                />
+    <main class="main">
+      <!-- ==================== ВКЛАДКА: ВРЕМЕННЫЕ РЯДЫ ==================== -->
+      <section class="tab-panel is-active" id="panel-series">
+        <div class="workspace">
+          <!-- ---------- Левая колонка ---------- -->
+          <aside class="sidebar">
+            <!-- Данные -->
+            <section class="card">
+              <div class="card-head">
+                <div class="card-title">
+                  <h2>Данные</h2>
+                  <p class="card-sub" id="data-sub">Ряд ещё не загружен</p>
+                </div>
+                <span class="badge badge--muted" id="data-badge">нет данных</span>
               </div>
-              <!-- Блок метрик качества -->
-              <div class="metrics-block">
-                <h4>Точность модели</h4>
-                <table class="metrics-table">
-                  <thead>
-                    <tr>
-                      <th>Метрика</th>
-                      <th>Значение</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>Средняя абсолютная ошибка</td>
-                      <td id="mae-output">—</td>
-                    </tr>
-                    <tr>
-                      <td>Среднеквадратичная ошибка</td>
-                      <td id="rmse-output">—</td>
-                    </tr>
-                  </tbody>
-                </table>
+
+              <div
+                class="segmented"
+                id="input-mode"
+                role="group"
+                aria-label="Тип файла с данными"
+              >
+                <button type="button" class="seg is-active" data-mode="text">
+                  Текстовый файл
+                </button>
+                <button type="button" class="seg" data-mode="excel">
+                  Excel
+                </button>
+              </div>
+
+              <div class="dropzone" id="dropzone" tabindex="0" role="button">
+                <input
+                  type="file"
+                  id="file-input"
+                  accept=".txt,.csv,.tsv"
+                  hidden
+                />
+                <span class="dropzone-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                </span>
+                <p class="dropzone-title">Перетащите файл сюда</p>
+                <p class="dropzone-hint">
+                  или <span class="link" id="btn-pick">выберите на компьютере</span>
+                </p>
+                <p class="dropzone-formats" id="file-formats">
+                  TXT · CSV — числа через пробел, «;» или запятую
+                </p>
+              </div>
+
+              <div class="data-meta hidden" id="data-meta">
+                <span class="data-meta-name" id="data-meta-name"></span>
+                <span class="data-meta-cols" id="data-meta-cols"></span>
+              </div>
+
+              <div class="btn-row">
+                <button class="btn btn-primary" id="btn-generate">
+                  Сгенерировать
+                </button>
+                <button class="btn btn-ghost" id="btn-calc">Рассчитать</button>
+              </div>
+
+              <div class="save-row">
+                <span class="save-label">Сохранить как</span>
+                <div
+                  class="segmented segmented--sm"
+                  id="save-format"
+                  role="group"
+                  aria-label="Формат сохранения"
+                >
+                  <button type="button" class="seg" data-format="txt">
+                    TXT
+                  </button>
+                  <button type="button" class="seg is-active" data-format="csv">
+                    CSV
+                  </button>
+                  <button type="button" class="seg" data-format="xlsx">
+                    XLSX
+                  </button>
+                </div>
+                <button class="btn btn-outline btn-sm" id="btn-save">
+                  Скачать
+                </button>
+              </div>
+            </section>
+
+            <!-- Параметры -->
+            <section class="card">
+              <div class="card-head">
+                <div class="card-title">
+                  <h2>Параметры расчёта</h2>
+                  <p class="card-sub">Длина ряда, шум и начальные условия</p>
+                </div>
+              </div>
+
+              <div class="field-grid">
+                <label class="field">
+                  <span>Длина ряда N</span>
+                  <input
+                    id="param-N"
+                    type="number"
+                    min="3"
+                    max="5000"
+                    step="1"
+                    value="122"
+                  />
+                </label>
+                <label class="field">
+                  <span>Зерно генератора</span>
+                  <input id="param-seed" type="number" step="1" value="42" />
+                </label>
+              </div>
+
+              <div class="params-group">
+                <span class="params-label">Шум δW</span>
+                <div class="mini-inputs">
+                  <label class="mini-field">
+                    <span class="mini-var mini-var--x">x</span>
+                    <input
+                      id="noise-x"
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value="0.8"
+                    />
+                  </label>
+                  <label class="mini-field">
+                    <span class="mini-var mini-var--y">y</span>
+                    <input
+                      id="noise-y"
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value="0.8"
+                    />
+                  </label>
+                  <label class="mini-field">
+                    <span class="mini-var mini-var--z">z</span>
+                    <input
+                      id="noise-z"
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value="0.8"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div class="params-group">
+                <span class="params-label">Начальные условия</span>
+                <div class="mini-inputs">
+                  <label class="mini-field">
+                    <span class="mini-var mini-var--x">x₀</span>
+                    <input
+                      id="init-x"
+                      type="number"
+                      step="0.1"
+                      value="0"
+                    />
+                  </label>
+                  <label class="mini-field">
+                    <span class="mini-var mini-var--y">y₀</span>
+                    <input
+                      id="init-y"
+                      type="number"
+                      step="0.1"
+                      value="0"
+                    />
+                  </label>
+                  <label class="mini-field">
+                    <span class="mini-var mini-var--z">z₀</span>
+                    <input
+                      id="init-z"
+                      type="number"
+                      step="0.1"
+                      value="0"
+                    />
+                  </label>
+                </div>
+              </div>
+            </section>
+
+            <!-- Модели -->
+            <section class="card">
+              <div class="card-head">
+                <div class="card-title">
+                  <h2>Уравнения моделей</h2>
+                  <p class="card-sub">
+                    Напишите в формуле y или z — модель появится сама
+                  </p>
+                </div>
+              </div>
+              <div id="models-list" class="models-list"></div>
+              <div class="model-add" id="model-add">
+                <button type="button" class="btn btn-ghost btn-sm" data-add="y">
+                  + Добавить yₜ
+                </button>
+                <button type="button" class="btn btn-ghost btn-sm" data-add="z">
+                  + Добавить zₜ
+                </button>
+              </div>
+            </section>
+          </aside>
+
+          <!-- ---------- Правая колонка ---------- -->
+          <section class="content">
+            <div class="metrics-head">
+              <div class="metrics-title">
+                <h2>Точность модели</h2>
+                <p class="card-sub" id="metrics-sub">
+                  Сравнение теоретической и расчётной кривой
+                </p>
+              </div>
+              <div
+                class="segmented segmented--sm"
+                id="metrics-model"
+                role="group"
+                aria-label="Модель для метрик"
+              >
+                <button type="button" class="seg is-active" data-model="x">
+                  xₜ
+                </button>
+                <button type="button" class="seg hidden" data-model="y">
+                  yₜ
+                </button>
+                <button type="button" class="seg hidden" data-model="z">
+                  zₜ
+                </button>
               </div>
             </div>
+
+            <div class="kpi-row">
+              <div class="kpi">
+                <span class="kpi-label">MAE</span>
+                <span class="kpi-value" id="kpi-mae">—</span>
+                <span class="kpi-note">средняя абсолютная ошибка</span>
+              </div>
+              <div class="kpi">
+                <span class="kpi-label">RMSE</span>
+                <span class="kpi-value" id="kpi-rmse">—</span>
+                <span class="kpi-note">среднеквадратичная ошибка</span>
+              </div>
+              <div class="kpi">
+                <span class="kpi-label">MAPE</span>
+                <span class="kpi-value" id="kpi-mape">—</span>
+                <span class="kpi-note">средняя процентная ошибка</span>
+              </div>
+              <div class="kpi">
+                <span class="kpi-label">R²</span>
+                <span class="kpi-value" id="kpi-r2">—</span>
+                <span class="kpi-note">коэффициент детерминации</span>
+              </div>
+            </div>
+
+            <section class="card chart-card">
+              <div class="card-head">
+                <div class="card-title">
+                  <h2>Динамика временных рядов</h2>
+                  <p class="card-sub" id="chart-series-sub">
+                    Теоретическая модель, оценка МНК и загруженные данные
+                  </p>
+                </div>
+                <button
+                  class="icon-btn"
+                  id="btn-save-chart-series"
+                  title="Скачать график PNG"
+                  aria-label="Скачать график PNG"
+                >
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M12 4v10m0 0-4-4m4 4 4-4"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M4 17v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <div id="chart-series" class="chart-host"></div>
+            </section>
+
+            <div class="grid-2">
+              <section class="card chart-card">
+                <div class="card-head">
+                  <div class="card-title">
+                    <h2>Фазовый портрет</h2>
+                    <p class="card-sub" id="phase-sub">xₜ – xₜ₋₁</p>
+                  </div>
+                  <div
+                    class="segmented segmented--sm"
+                    id="phase-pair"
+                    role="group"
+                    aria-label="Пары переменных"
+                  >
+                    <button type="button" class="seg is-active" data-pair="xy">
+                      x–y
+                    </button>
+                    <button type="button" class="seg" data-pair="xz">
+                      x–z
+                    </button>
+                    <button type="button" class="seg" data-pair="yz">
+                      y–z
+                    </button>
+                  </div>
+                </div>
+                <div id="chart-phase" class="chart-host chart-host--sm"></div>
+              </section>
+
+              <section class="card">
+                <div class="card-head">
+                  <div class="card-title">
+                    <h2>Таблица данных</h2>
+                    <p class="card-sub" id="table-sub">первые 12 строк</p>
+                  </div>
+                  <button
+                    class="icon-btn"
+                    id="btn-save-table"
+                    title="Сохранить таблицу"
+                    aria-label="Сохранить таблицу"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M12 4v10m0 0-4-4m4 4 4-4"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M4 17v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <div class="table-wrap" id="data-table-wrap"></div>
+              </section>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <!-- ==================== ВКЛАДКА: СИСТЕМА ЛОРЕНЦА ==================== -->
+      <section class="tab-panel" id="panel-lorenz">
+        <div class="workspace">
+          <aside class="sidebar">
+            <section class="card">
+              <div class="card-head">
+                <div class="card-title">
+                  <h2>Система уравнений</h2>
+                  <p class="card-sub" id="ode-sub">
+                    dx/dt = σ(y − x) · dy/dt = x(ρ − z) − y · dz/dt = xy − βz
+                  </p>
+                </div>
+              </div>
+
+              <label class="field">
+                <span>Готовая система</span>
+                <select id="ode-preset">
+                  <option value="lorenz">Модель Лоренца</option>
+                  <option value="rossler">Система Рёсслера</option>
+                  <option value="vanderpol">Осциллятор Ван дер Поля</option>
+                  <option value="custom">Своя система</option>
+                </select>
+              </label>
+
+              <div class="eq-list" id="ode-eqs">
+                <label class="eq-row">
+                  <span class="eq-var">dx/dt</span>
+                  <input
+                    class="eq-input"
+                    data-eq="0"
+                    type="text"
+                    spellcheck="false"
+                  />
+                </label>
+                <label class="eq-row">
+                  <span class="eq-var">dy/dt</span>
+                  <input
+                    class="eq-input"
+                    data-eq="1"
+                    type="text"
+                    spellcheck="false"
+                  />
+                </label>
+                <label class="eq-row">
+                  <span class="eq-var">dz/dt</span>
+                  <input
+                    class="eq-input"
+                    data-eq="2"
+                    type="text"
+                    spellcheck="false"
+                  />
+                </label>
+              </div>
+
+              <div class="params-block">
+                <span class="params-label">Коэффициенты системы</span>
+                <div class="param-chips" id="ode-params"></div>
+              </div>
+
+              <div class="field-grid">
+                <label class="field">
+                  <span>Время T</span>
+                  <input id="ode-tmax" type="number" step="1" value="40" />
+                </label>
+                <label class="field">
+                  <span>Шаг dt</span>
+                  <input
+                    id="ode-dt"
+                    type="number"
+                    step="0.001"
+                    min="0.0001"
+                    value="0.01"
+                  />
+                </label>
+              </div>
+
+              <div class="params-group">
+                <span class="params-label">Начальные условия</span>
+                <div class="mini-inputs">
+                  <label class="mini-field">
+                    <span class="mini-var mini-var--x">x₀</span>
+                    <input id="ode-x0" type="number" step="0.1" value="1" />
+                  </label>
+                  <label class="mini-field">
+                    <span class="mini-var mini-var--y">y₀</span>
+                    <input id="ode-y0" type="number" step="0.1" value="1" />
+                  </label>
+                  <label class="mini-field">
+                    <span class="mini-var mini-var--z">z₀</span>
+                    <input id="ode-z0" type="number" step="0.1" value="1" />
+                  </label>
+                </div>
+              </div>
+
+              <label class="field">
+                <span>Метод интегрирования</span>
+                <select id="ode-method">
+                  <option value="rk4">Рунге–Кутта 4-го порядка</option>
+                  <option value="euler">Метод Эйлера</option>
+                </select>
+              </label>
+
+              <div class="btn-row">
+                <button class="btn btn-primary" id="btn-ode-calc">
+                  Рассчитать
+                </button>
+                <button class="btn btn-ghost" id="btn-ode-reset">
+                  Сбросить
+                </button>
+              </div>
+
+              <p class="formula-hint" id="ode-hint">
+                Поддерживаются sin, cos, exp, sqrt, ln, abs, pi, степень ^.
+              </p>
+            </section>
+          </aside>
+
+          <section class="content">
+            <div class="kpi-row kpi-row--compact">
+              <div class="kpi">
+                <span class="kpi-label">Точек</span>
+                <span class="kpi-value" id="ode-kpi-points">—</span>
+                <span class="kpi-note">шагов интегрирования</span>
+              </div>
+              <div class="kpi">
+                <span class="kpi-label">Шаг dt</span>
+                <span class="kpi-value" id="ode-kpi-dt">—</span>
+                <span class="kpi-note">фактический шаг</span>
+              </div>
+              <div class="kpi">
+                <span class="kpi-label">Метод</span>
+                <span class="kpi-value kpi-value--sm" id="ode-kpi-method">—</span>
+                <span class="kpi-note">интегратор</span>
+              </div>
+              <div class="kpi">
+                <span class="kpi-label">Время</span>
+                <span class="kpi-value" id="ode-kpi-time">—</span>
+                <span class="kpi-note">расчёт, мс</span>
+              </div>
+            </div>
+
+            <section class="card chart-card">
+              <div class="card-head">
+                <div class="card-title">
+                  <h2>Странный аттрактор</h2>
+                  <p class="card-sub">
+                    Траектория в фазовом пространстве · вращайте мышью, масштаб — колесом
+                  </p>
+                </div>
+                <span class="badge badge--info" id="attractor-badge">Лоренц</span>
+                <button
+                  class="icon-btn"
+                  id="btn-save-attractor"
+                  title="Скачать аттрактор PNG"
+                  aria-label="Скачать аттрактор PNG"
+                >
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M12 4v10m0 0-4-4m4 4 4-4"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M4 17v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <div id="chart-attractor" class="chart-host chart-host--lg"></div>
+            </section>
+
+            <div class="grid-2">
+              <section class="card chart-card">
+                <div class="card-head">
+                  <div class="card-title">
+                    <h2>Решение системы</h2>
+                    <p class="card-sub">x(t), y(t), z(t)</p>
+                  </div>
+                </div>
+                <div id="chart-ode-series" class="chart-host chart-host--sm"></div>
+              </section>
+
+              <section class="card chart-card">
+                <div class="card-head">
+                  <div class="card-title">
+                    <h2>Фазовый портрет x–y</h2>
+                  </div>
+                </div>
+                <div id="chart-ode-phase" class="chart-host chart-host--sm"></div>
+              </section>
+            </div>
+
+            <section class="card">
+              <div class="card-head">
+                <div class="card-title">
+                  <h2>Таблица решения</h2>
+                  <p class="card-sub" id="ode-table-sub">первые 12 строк</p>
+                </div>
+                <div class="card-actions">
+                  <div
+                    class="segmented segmented--sm"
+                    id="ode-save-format"
+                    role="group"
+                    aria-label="Формат сохранения решения"
+                  >
+                    <button type="button" class="seg" data-format="txt">
+                      TXT
+                    </button>
+                    <button type="button" class="seg is-active" data-format="csv">
+                      CSV
+                    </button>
+                    <button type="button" class="seg" data-format="xlsx">
+                      XLSX
+                    </button>
+                  </div>
+                  <button class="btn btn-outline btn-sm" id="btn-ode-save">
+                    Скачать
+                  </button>
+                </div>
+              </div>
+              <div class="table-wrap" id="ode-table-wrap"></div>
+            </section>
+          </section>
+        </div>
+      </section>
+
+      <!-- ==================== ВКЛАДКА: СПРАВКА ==================== -->
+      <section class="tab-panel" id="panel-help">
+        <div class="help">
+          <section class="card help-intro">
+            <h2>Как пользоваться программой</h2>
+            <p>
+              Программа моделирует случайные временные ряды по уравнениям
+              авторегрессии, оценивает коэффициенты методом наименьших квадратов
+              (МНК) и решает системы дифференциальных уравнений методом
+              Рунге–Кутта 4-го порядка — в том числе классическую модель Лоренца.
+            </p>
+            <ol class="help-steps">
+              <li>
+                Введите уравнение модели: например
+                <code>x[t] = a0 + a1 * x[t-1] + wt</code>. Коэффициенты
+                <code>a0, a1, …</code> можно задать в таблице под уравнением.
+              </li>
+              <li>
+                Если в формуле появляется <code>y[….]</code> или
+                <code>z[….]</code>, автоматически открывается уравнение
+                <code>yₜ</code> или <code>zₜ</code> — так задаётся система из
+                трёх моделей.
+              </li>
+              <li>
+                Задайте длину ряда <b>N</b>, шум <b>δW</b> и начальные условия,
+                затем нажмите «Сгенерировать».
+              </li>
+              <li>
+                Чтобы оценить коэффициенты по реальным данным, загрузите
+                TXT/CSV/XLSX (колонки <code>x</code>, <code>y</code>,
+                <code>z</code>) и нажмите «Рассчитать».
+              </li>
+              <li>
+                Результат сохраняется в TXT, CSV или XLSX кнопкой «Скачать».
+                График можно скачать как PNG.
+              </li>
+            </ol>
+          </section>
+
+          <div class="help-grid">
+            <section class="card">
+              <h2>Дискретные модели</h2>
+              <p class="help-formula">xₜ = a₀ + a₁·xₜ₋₁ + a₂·yₜ₋₁ + δWₓ</p>
+              <p class="help-formula">yₜ = b₀ + b₁·xₜ₋₁ + b₂·yₜ₋₁ + δWᵧ</p>
+              <p class="help-formula">zₜ = c₀ + c₁·yₜ₋₁ + c₂·zₜ₋₁ + δW𝓏</p>
+              <p>
+                Коэффициенты подбираются МНК: минимизируется сумма квадратов
+                отклонений. Для каждого уравнения строится своя матрица
+                регрессоров, поэтому система решается по уравнению.
+              </p>
+            </section>
+
+            <section class="card">
+              <h2>Метод Рунге–Кутта</h2>
+              <p class="help-formula">
+                k₁ = f(t, y)<br />
+                k₂ = f(t + h/2, y + h·k₁/2)<br />
+                k₃ = f(t + h/2, y + h·k₂/2)<br />
+                k₄ = f(t + h, y + h·k₃)<br />
+                yₙ₊₁ = yₙ + h/6 · (k₁ + 2k₂ + 2k₃ + k₄)
+              </p>
+              <p>
+                Метод 4-го порядка точности: ошибка на шаге ∼h⁵, глобальная
+                ∼h⁴. В программе доступен и метод Эйлера — для сравнения.
+              </p>
+            </section>
+
+            <section class="card">
+              <h2>Модель Лоренца</h2>
+              <p class="help-formula">
+                dx/dt = σ(y − x)<br />
+                dy/dt = x(ρ − z) − y<br />
+                dz/dt = x·y − β·z
+              </p>
+              <p>
+                При σ = 10, ρ = 28, β = 8/3 система демонстрирует
+                детерминированный хаос: траектории расходятся экспоненциально,
+                но остаются на странном аттракторе. Нажмите «Рассчитать» на
+                вкладке «Система Лоренца» и повращайте аттрактор мышью.
+              </p>
+            </section>
+
+            <section class="card">
+              <h2>Форматы файлов</h2>
+              <p>
+                <b>TXT / CSV.</b> Числа через пробел, запятую или «;». Допустима
+                шапка <code>x;y;z</code>. Если колонок три, первая — это
+                <code>x</code>; если есть колонка <code>t</code> или
+                <code>time</code>, она становится осью времени.
+              </p>
+              <pre class="help-code">
+t;x;y;z
+0;1,24;0,53;0,11
+1;1,31;0,61;0,14
+2;1,18;0,58;0,19</pre>
+              <p>
+                <b>XLSX.</b> Первый лист книги, числа в колонках. Шапка — по
+                желанию. Экспорт создаёт такой же файл, который открывается в
+                Excel и LibreOffice.
+              </p>
+            </section>
           </div>
-        </div>
-      </div>
 
-      <!-- Блок расчета данных -->
-      <div id="direct-block" class="block">
-        <div class="toggle-header">
-          <h3>Расчитанные по коэффициентам данные</h3>
-          <label class="toggle-switch">
-            <input type="checkbox" id="toggle-direct" checked />
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        <div id="direct-content">
-          <div
-            id="generated-data-output"
-            class="matrix-preview"
-            style="margin-top: 14px"
-          ></div>
-          <button class="copy_button" id="copy_1">Копировать</button>
-        </div>
-      </div>
+          <section class="card help-note">
+            <h2>Обозначения</h2>
+            <div class="legend-grid">
+              <span><i class="dot dot--x"></i>xₜ — синяя серия</span>
+              <span><i class="dot dot--y"></i>yₜ — циановая серия</span>
+              <span><i class="dot dot--z"></i>zₜ — фиолетовая серия</span>
+              <span><i class="dot dot--lsm"></i>оценка МНК — янтарная линия</span>
+              <span><i class="dot dot--data"></i>загруженные данные — точки</span>
+              <span><i class="dot dot--noise"></i>δW — случайный шум</span>
+            </div>
+          </section>
 
-      <!-- Блок расчета коэффициентов -->
-      <div id="data-block" class="block">
-        <div class="toggle-header">
-          <h3>Данные для расчета коэффициентов (Введите минимум 3 значения)</h3>
-          <label class="toggle-switch">
-            <input type="checkbox" id="toggle-data" checked />
-            <span class="toggle-slider"></span>
-          </label>
+          <footer class="help-footer">
+            <p>© 2026 Лаборатория · Стохастические временные ряды</p>
+          </footer>
         </div>
-        <div id="data-content">
-          <textarea
-            id="y-data"
-            rows="3"
-            placeholder="Введите числа через пробел, запятую или с новой строки"
-          ></textarea>
-        </div>
-      </div>
-    </article>
+      </section>
+    </main>
 
-    <footer>
-      <p>© 2026 Лаборатория</p>
-    </footer>
-
-    <script src="jquery.js"></script>
-    <script src="jquery.flot.js"></script>
+    <script src="chart.js"></script>
+    <script src="io.js"></script>
+    <script src="rk.js"></script>
     <script src="main.js"></script>
   </body>
 </html>

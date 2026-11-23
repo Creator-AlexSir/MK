@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChartKit — самопроверка canvas-движка</title>
+<style>
+  :root {
+    --blue-950:#061a33; --blue-900:#0b2545; --blue-800:#123a6b; --blue-700:#1b4f8a;
+    --blue-600:#2563a8; --blue-500:#2f7fd0; --cyan-500:#1fa6d8; --cyan-400:#3fc8f0;
+    --cyan-100:#dcefff; --bg:#f2f8ff; --surface:#ffffff; --surface-2:#eaf4ff;
+    --line:#cfe3f7; --text:#0c2440; --muted:#58799c;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: radial-gradient(1200px 500px at 15% -10%, #e3f2ff 0%, var(--bg) 55%) fixed;
+    color: var(--text);
+    font-family: "Segoe UI", "Inter", system-ui, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1140px; margin: 0 auto; padding: 30px 22px 46px; }
+  h1 { margin: 0 0 6px; font-size: 23px; font-weight: 700; color: var(--blue-900); letter-spacing: -.2px; }
+  .sub { margin: 0 0 24px; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
+  .sub code { background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 1px 5px; font-size: 12px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: 0 12px 34px rgba(27, 79, 138, .09), 0 2px 6px rgba(27, 79, 138, .04);
+    padding: 16px 18px 18px;
+    overflow: hidden;
+  }
+  .card.full { grid-column: 1 / -1; }
+  .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .head h2 { margin: 0; font-size: 14px; font-weight: 600; color: var(--blue-800); }
+  .head .tools { display: flex; gap: 8px; flex-wrap: wrap; }
+  .hint { margin: 10px 2px 0; font-size: 11.5px; color: var(--muted); line-height: 1.5; }
+  button {
+    font: inherit; font-size: 12px; font-weight: 600;
+    padding: 6px 12px; border-radius: 9px;
+    border: 1px solid var(--line);
+    background: var(--surface-2); color: var(--blue-700);
+    cursor: pointer; transition: background .15s ease, transform .08s ease, border-color .15s ease;
+  }
+  button:hover { background: var(--cyan-100); border-color: #b7d7f2; }
+  button:active { transform: translateY(1px); }
+  #errors {
+    display: none; margin: 0 0 18px; padding: 12px 16px;
+    border-radius: 12px; border: 1px solid #f3c3c7; background: #fff1f2;
+    color: #9f1239; font-size: 13px; font-weight: 600; white-space: pre-wrap;
+  }
+  @media (max-width: 860px) {
+    .grid { grid-template-columns: 1fr; }
+    .card.full { grid-column: auto; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ChartKit — самопроверка canvas-движка</h1>
+  <p class="sub">
+    Статическая страница (открывается как файл, без сервера). Подключает <code>../chart.js</code>.
+    Проверяет: line с 3 сериями, пустое состояние, фазовый портрет Лоренца с <code>preserveOrder</code>,
+    3D-аттрактор (Эйлер), легенду-пилюли, тултип, обновление данных и экспорт PNG.
+  </p>
+  <div id="errors"></div>
+
+  <div class="grid">
+    <div class="card full">
+      <div class="head">
+        <h2>Временные ряды — 3 серии (line + area + dashed)</h2>
+        <div class="tools">
+          <button id="btn-line-random" type="button">Сгенерировать заново</button>
+          <button id="btn-line-png" type="button">PNG</button>
+        </div>
+      </div>
+      <div id="chart-line"></div>
+      <p class="hint">Клик по пилюле легенды скрывает/показывает серию. Наведите мышь на график — появится вертикальная линия и карточка со значениями.</p>
+    </div>
+
+    <div class="card">
+      <div class="head">
+        <h2>Пустое состояние</h2>
+        <div class="tools">
+          <button id="btn-empty-toggle" type="button">Показать данные</button>
+          <button id="btn-empty-png" type="button">PNG</button>
+        </div>
+      </div>
+      <div id="chart-empty"></div>
+      <p class="hint">Без серий: по центру аккуратная заглушка, ошибок в консоли нет.</p>
+    </div>
+
+    <div class="card">
+      <div class="head">
+        <h2>Фазовый портрет x–y (preserveOrder)</h2>
+        <div class="tools">
+          <button id="btn-portrait-png" type="button">PNG</button>
+        </div>
+      </div>
+      <div id="chart-portrait"></div>
+      <p class="hint">Немонотонный x: порядок точек сохранён (<code>preserveOrder:true</code>, <code>smooth:false</code>), поэтому видна «бабочка», а не отсортированная каша. Тултип ищет ближайшую точку в 2D.</p>
+    </div>
+
+    <div class="card full">
+      <div class="head">
+        <h2>Аттрактор Лоренца — phase3d</h2>
+        <div class="tools">
+          <button id="btn-phase-reset" type="button">Сброс вида</button>
+          <button id="btn-phase-png" type="button">PNG</button>
+        </div>
+      </div>
+      <div id="chart-phase"></div>
+      <p class="hint">Траектория посчитана методом Эйлера прямо на странице. Мышь — вращение, колесо — масштаб, двойной клик — сброс. Масштаб автоматически подгоняется под карточку.</p>
+    </div>
+  </div>
+</div>
+
+<script src="../chart.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var errorsBox = document.getElementById('errors');
+  window.addEventListener('error', function (e) {
+    errorsBox.style.display = 'block';
+    errorsBox.textContent += (errorsBox.textContent ? '\n' : '') + 'JS-ошибка: ' + (e.message || e.error);
+  });
+
+  // --- детерминированный ГПСЧ (чтобы картинка была воспроизводимой) ---
+  var seed = 42;
+  function rnd() {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 4294967296;
+  }
+  function gauss() {
+    var u = 0;
+    var v = 0;
+    while (!u) u = rnd();
+    while (!v) v = rnd();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+
+  function makeSeries(n) {
+    var sx = [];
+    var sy = [];
+    var sz = [];
+    var x = 0;
+    var acc = 0;
+    for (var i = 0; i < n; i++) {
+      x = 0.82 * x + gauss() * 0.55;                                // AR(1)
+      sx.push([i, x + 1.2]);
+      sy.push([i, 1.8 + 0.9 * Math.sin(i / 6.5) + gauss() * 0.18]); // сезонность + шум
+      acc += gauss() * 0.32;                                        // случайное блуждание
+      sz.push([i, acc]);
+    }
+    return [
+      { name: 'x\u209C', color: '#2563eb', data: sx, kind: 'line', width: 2.6 },
+      { name: 'y\u209C', color: '#06b6d4', data: sy, kind: 'area', width: 2.6, fillOpacity: 0.16 },
+      { name: 'z\u209C', color: '#7c3aed', data: sz, kind: 'line', width: 2.2, dash: [6, 4] }
+    ];
+  }
+
+  // --- траектория Лоренца: простой метод Эйлера ---
+  function lorenzRun() {
+    var sigma = 10;
+    var rho = 28;
+    var beta = 8 / 3;
+    var dt = 0.005;
+    var x = 1;
+    var y = 1;
+    var z = 20;
+    var points3d = [];
+    var xy = [];
+    for (var i = 0; i < 3200; i++) {
+      var dx = sigma * (y - x);
+      var dy = x * (rho - z) - y;
+      var dz = x * y - beta * z;
+      x += dx * dt;
+      y += dy * dt;
+      z += dz * dt;
+      if (i > 120) {
+        points3d.push([x, y, z]);  // переходный процесс отбрасываем
+        xy.push([x, y]);           // порядок точек важен для фазового портрета
+      }
+    }
+    return { points3d: points3d, xy: xy };
+  }
+  var lorenzData = lorenzRun();
+
+  var line = ChartKit.line(document.getElementById('chart-line'), {
+    height: 350,
+    xLabel: 't',
+    yLabel: 'значение',
+    yZero: false,
+    animate: true,
+    legend: true,
+    tooltip: true,
+    series: makeSeries(64)
+  });
+
+  var empty = ChartKit.line(document.getElementById('chart-empty'), {
+    height: 300,
+    xLabel: 't',
+    yLabel: 'значение',
+    animate: true,
+    legend: true,
+    tooltip: true,
+    emptyText: 'Нет данных для отображения',
+    series: []
+  });
+
+  // фазовый портрет x–y: точки идут в порядке интегрирования, x немонотонен
+  var portrait = ChartKit.line(document.getElementById('chart-portrait'), {
+    height: 300,
+    xLabel: 'x',
+    yLabel: 'y',
+    yZero: false,
+    animate: true,
+    legend: false,
+    tooltip: true,
+    series: [{
+      name: 'x–y',
+      color: '#2563eb',
+      data: lorenzData.xy,
+      kind: 'line',
+      preserveOrder: true,
+      smooth: false,
+      width: 1.4
+    }]
+  });
+
+  var phase = ChartKit.phase3d(document.getElementById('chart-phase'), {
+    height: 440,
+    points: lorenzData.points3d,
+    labels: { x: 'x', y: 'y', z: 'z' },
+    autoRotate: true,
+    animate: true,
+    axes: true,
+    tooltip: false,
+    colorFrom: '#38bdf8',
+    colorTo: '#1d4ed8'
+  });
+
+  function downloadPNG(chart, filename) {
+    var a = document.createElement('a');
+    a.href = chart.toDataURL();
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  document.getElementById('btn-line-png').addEventListener('click', function () {
+    downloadPNG(line, 'line-chart.png');
+  });
+  document.getElementById('btn-line-random').addEventListener('click', function () {
+    line.update({ series: makeSeries(64) });
+  });
+  document.getElementById('btn-empty-png').addEventListener('click', function () {
+    downloadPNG(empty, 'empty-chart.png');
+  });
+  var emptyShown = false;
+  document.getElementById('btn-empty-toggle').addEventListener('click', function () {
+    emptyShown = !emptyShown;
+    empty.update({ series: emptyShown ? makeSeries(36) : [] });
+    this.textContent = emptyShown ? 'Очистить' : 'Показать данные';
+  });
+  document.getElementById('btn-phase-png').addEventListener('click', function () {
+    downloadPNG(phase, 'lorenz-phase.png');
+  });
+  document.getElementById('btn-portrait-png').addEventListener('click', function () {
+    downloadPNG(portrait, 'lorenz-portrait.png');
+  });
+  document.getElementById('btn-phase-reset').addEventListener('click', function () {
+    // штатный сброс вида — двойной клик по canvas
+    var canvas = document.querySelector('#chart-phase canvas');
+    if (canvas) {
+      canvas.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    }
+  });
+
+  // для отладки из консоли
+  window.demoCharts = { line: line, empty: empty, portrait: portrait, phase: phase };
+})();
+</script>
+</body>
+</html>

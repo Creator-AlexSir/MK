@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DataIO — самопроверка ввода/вывода (TXT/CSV/XLSX)</title>
+<style>
+  :root {
+    --blue-950:#061a33; --blue-900:#0b2545; --blue-800:#123a6b; --blue-700:#1b4f8a;
+    --blue-600:#2563a8; --blue-500:#2f7fd0; --cyan-500:#1fa6d8; --cyan-400:#3fc8f0;
+    --cyan-100:#dcefff; --bg:#f2f8ff; --surface:#ffffff; --surface-2:#eaf4ff;
+    --line:#cfe3f7; --text:#0c2440; --muted:#58799c; --ok:#0ea37a; --warn:#e08b1f; --err:#d64550;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px 16px 48px; background: var(--bg); color: var(--text);
+    font: 15px/1.5 "Segoe UI", "Inter", system-ui, Arial, sans-serif;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  h1 { margin: 0 0 4px; font-size: 24px; color: var(--blue-900); font-weight: 700; }
+  h2 { margin: 0 0 12px; font-size: 17px; color: var(--blue-800); font-weight: 600; }
+  .sub { color: var(--muted); margin: 0 0 20px; font-size: 14px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    padding: 16px 18px; margin-bottom: 16px; box-shadow: 0 2px 10px rgba(12, 36, 64, .05);
+  }
+  .drop {
+    border: 2px dashed var(--blue-500); border-radius: 12px; background: var(--surface-2);
+    padding: 22px; text-align: center; cursor: pointer; transition: background .15s, border-color .15s;
+  }
+  .drop:hover, .drop.over { background: var(--cyan-100); border-color: var(--cyan-500); }
+  .drop b { color: var(--blue-700); }
+  .drop small { color: var(--muted); display: block; margin-top: 6px; }
+  input[type=file] { display: none; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
+  button {
+    font: inherit; font-weight: 600; color: #fff; background: var(--blue-600);
+    border: 0; border-radius: 9px; padding: 9px 16px; cursor: pointer;
+    transition: background .15s, transform .05s;
+  }
+  button:hover { background: var(--blue-700); }
+  button:active { transform: translateY(1px); }
+  button.ghost { background: transparent; color: var(--blue-700); border: 1px solid var(--blue-500); }
+  button.ghost:hover { background: var(--surface-2); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .status { margin-top: 12px; color: var(--muted); font-size: 14px; }
+  .status.ok { color: var(--ok); }
+  .status.err { color: var(--err); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .chip {
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px;
+    padding: 4px 12px; font-size: 13px; color: var(--blue-800);
+  }
+  .chip i { color: var(--muted); font-style: normal; }
+  .warnbox { margin-top: 10px; padding: 10px 12px; border-radius: 9px; background: #fff7e8;
+    border: 1px solid #f0cf9a; color: #7a5312; font-size: 13.5px; }
+  .warnbox ul { margin: 6px 0 0 18px; padding: 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; margin-top: 10px; }
+  th, td { border-bottom: 1px solid var(--line); padding: 6px 10px; text-align: right; }
+  th { background: var(--surface-2); color: var(--blue-800); font-weight: 600; text-align: right; }
+  th:first-child, td:first-child { text-align: left; color: var(--muted); }
+  table.x { display: inline-block; width: auto; }
+  table.x th, table.x td { text-align: left; }
+  pre {
+    background: var(--blue-950); color: #d8ecff; border-radius: 10px; padding: 12px 14px;
+    overflow: auto; font: 12.5px/1.45 Consolas, "Courier New", monospace; max-height: 260px;
+  }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+  .muted { color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>DataIO — самопроверка модуля ввода/вывода</h1>
+  <p class="sub">
+    Страница подключает <code>../io.js</code> и проверяет <code>window.DataIO</code>:
+    чтение TXT/CSV/XLSX, нормализация серий, экспорт и скачивание файлов.
+  </p>
+
+  <div class="card">
+    <h2>1. Загрузка файла</h2>
+    <div class="drop" id="drop">
+      <b>Выберите файл</b> или перетащите его сюда
+      <small>.txt, .csv, .tsv, .xlsx / .xlsm — без внешних библиотек</small>
+      <input type="file" id="file" accept=".txt,.csv,.tsv,.xlsx,.xlsm,text/plain,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+    </div>
+    <div class="row">
+      <button class="ghost" id="demo">Демо-данные</button>
+      <button class="ghost" id="clear" disabled>Очистить</button>
+    </div>
+    <div class="status" id="status">Файл не выбран.</div>
+  </div>
+
+  <div class="card">
+    <h2>2. Распознанные колонки</h2>
+    <div id="columns" class="chips"><span class="muted">Нет данных.</span></div>
+    <div id="warnings"></div>
+    <div id="preview"></div>
+  </div>
+
+  <div class="card">
+    <h2>3. Нормализованная серия (normalizeSeries)</h2>
+    <div id="norm" class="muted">Нет данных.</div>
+  </div>
+
+  <div class="card">
+    <h2>4. Сохранение</h2>
+    <div class="row">
+      <button id="saveTxt" disabled>Сохранить TXT</button>
+      <button id="saveCsv" disabled>Сохранить CSV</button>
+      <button id="saveXlsx" disabled>Сохранить XLSX</button>
+    </div>
+    <div class="status" id="saveStatus">Сначала загрузите файл или нажмите «Демо-данные».</div>
+  </div>
+
+  <div class="card">
+    <h2>Журнал</h2>
+    <pre id="log">DataIO готов к работе.</pre>
+  </div>
+</div>
+
+<script src="../io.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var $ = function (id) { return document.getElementById(id); };
+  var state = { parsed: null, normalized: null, fileName: 'data' };
+
+  function log(msg) {
+    var el = $('log');
+    el.textContent += '\n' + new Date().toLocaleTimeString('ru-RU') + '  ' + msg;
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function setStatus(el, text, cls) {
+    el.textContent = text;
+    el.className = 'status' + (cls ? ' ' + cls : '');
+  }
+
+  function fmt(v) {
+    if (!isFinite(v)) return '—';
+    return Math.abs(v) >= 1e6 || (Math.abs(v) < 1e-4 && v !== 0) ? v.toExponential(3) : v.toFixed(6);
+  }
+
+  function showDemoData() {
+    var text = 't;x;y;z\n0;1,25;0,5;-1\n1;2,37;1,1;-0,75\n2;3,5;1,9;0,25\n' +
+               '3;4,12;2,4;1,5\n4;5;3;2,75\n';
+    return DataIO.parseText(text);
+  }
+
+  function render() {
+    var parsed = state.parsed;
+
+    // Колонки и предупреждения.
+    var chips = $('columns');
+    chips.innerHTML = '';
+    if (!parsed || !parsed.columns.length) {
+      chips.innerHTML = '<span class="muted">Числовые колонки не найдены.</span>';
+    } else {
+      parsed.columns.forEach(function (col, i) {
+        var span = document.createElement('span');
+        span.className = 'chip';
+        span.innerHTML = '<i>#' + (i + 1) + '</i> ' + escapeHtml(col.name) +
+          ' <i>(' + col.values.length + ' знач.)</i>';
+        chips.appendChild(span);
+      });
+    }
+    var wbox = $('warnings');
+    wbox.innerHTML = '';
+    var warns = (parsed && parsed.warnings) || [];
+    if (warns.length) {
+      var div = document.createElement('div');
+      div.className = 'warnbox';
+      div.innerHTML = '<b>Предупреждения</b> (пропущено строк: ' + (parsed.skipped || 0) + ')<ul>' +
+        warns.map(function (w) { return '<li>' + escapeHtml(w) + '</li>'; }).join('') + '</ul>';
+      wbox.appendChild(div);
+    } else if (parsed) {
+      var ok = document.createElement('div');
+      ok.className = 'warnbox';
+      ok.style.background = '#e9fbf4';
+      ok.style.borderColor = '#a9e5cd';
+      ok.style.color = '#0a6b52';
+      ok.textContent = 'Разбор без замечаний, пропущено строк: 0.';
+      wbox.appendChild(ok);
+    }
+
+    // Таблица предпросмотра (первые 12 строк).
+    var prev = $('preview');
+    prev.innerHTML = '';
+    if (parsed && parsed.columns.length) {
+      var table = document.createElement('table');
+      var n = Math.min(12, parsed.columns[0].values.length);
+      var head = '<tr><th>#</th>';
+      parsed.columns.forEach(function (c) { head += '<th>' + escapeHtml(c.name) + '</th>'; });
+      head += '</tr>';
+      var body = '';
+      for (var r = 0; r < n; r++) {
+        body += '<tr><td>' + (r + 1) + '</td>';
+        parsed.columns.forEach(function (c) { body += '<td>' + fmt(c.values[r]) + '</td>'; });
+        body += '</tr>';
+      }
+      table.innerHTML = '<thead>' + head + '</thead><tbody>' + body + '</tbody>';
+      prev.appendChild(table);
+      if (parsed.columns[0].values.length > n) {
+        var more = document.createElement('div');
+        more.className = 'muted';
+        more.style.marginTop = '6px';
+        more.textContent = '… всего строк: ' + parsed.columns[0].values.length;
+        prev.appendChild(more);
+      }
+    }
+
+    // Нормализация.
+    var normBox = $('norm');
+    normBox.innerHTML = '';
+    state.normalized = null;
+    if (parsed && parsed.columns.length) {
+      try {
+        var norm = DataIO.normalizeSeries(parsed);
+        state.normalized = norm;
+        var rows = [
+          ['name', norm.name],
+          ['index', norm.index.slice(0, 8).map(fmt).join(', ') + (norm.index.length > 8 ? ' …' : '')],
+          ['x', norm.x.slice(0, 8).map(fmt).join(', ') + (norm.x.length > 8 ? ' …' : '')],
+          ['y', norm.y.length ? norm.y.slice(0, 8).map(fmt).join(', ') + (norm.y.length > 8 ? ' …' : '') : '—'],
+          ['z', norm.z.length ? norm.z.slice(0, 8).map(fmt).join(', ') + (norm.z.length > 8 ? ' …' : '') : '—'],
+          ['длина', String(norm.index.length)]
+        ];
+        var t = document.createElement('table');
+        t.className = 'x';
+        t.innerHTML = rows.map(function (row) {
+          return '<tr><th>' + row[0] + '</th><td>' + escapeHtml(row[1]) + '</td></tr>';
+        }).join('');
+        normBox.className = '';
+        normBox.appendChild(t);
+        if (norm.warnings.length) {
+          var nb = document.createElement('div');
+          nb.className = 'warnbox';
+          nb.innerHTML = '<b>Предупреждения:</b><ul>' +
+            norm.warnings.map(function (w) { return '<li>' + escapeHtml(w) + '</li>'; }).join('') + '</ul>';
+          normBox.appendChild(nb);
+        }
+      } catch (e) {
+        normBox.className = 'status err';
+        normBox.textContent = 'normalizeSeries: ' + e.message;
+        log('normalizeSeries: ошибка — ' + e.message);
+      }
+    } else {
+      normBox.className = 'muted';
+      normBox.textContent = 'Нет данных.';
+    }
+
+    var has = !!(parsed && parsed.columns.length && state.normalized);
+    ['saveTxt', 'saveCsv', 'saveXlsx'].forEach(function (id) { $(id).disabled = !has; });
+    $('clear').disabled = !has;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  async function handleFile(file) {
+    if (!file) return;
+    state.fileName = (file.name || 'data').replace(/\.[^.]+$/, '') || 'data';
+    setStatus($('status'), 'Читаю «' + file.name + '»…', '');
+    log('Чтение файла: ' + file.name + ' (' + file.size + ' байт)');
+    try {
+      var parsed = await DataIO.readFile(file);
+      state.parsed = parsed;
+      setStatus($('status'),
+        'Файл «' + file.name + '» прочитан: колонок ' + parsed.columns.length +
+        ', строк ' + (parsed.columns.length ? parsed.columns[0].values.length : 0) +
+        ', пропущено ' + parsed.skipped + '.', 'ok');
+      log('Успешно: колонок ' + parsed.columns.length +
+        (parsed.meta && parsed.meta.delimiter ? ', разделитель «' + parsed.meta.delimiter + '»' : '') +
+        (parsed.meta && parsed.meta.source ? ', источник ' + parsed.meta.source : ''));
+      render();
+    } catch (e) {
+      state.parsed = null;
+      setStatus($('status'), 'Ошибка чтения: ' + e.message, 'err');
+      log('Ошибка чтения: ' + e.message);
+      render();
+    }
+  }
+
+  function save(kind) {
+    if (!state.parsed || !state.normalized) return;
+    try {
+      var blob, name;
+      if (kind === 'txt') {
+        blob = DataIO.exportTxt(state.normalized);
+        name = state.fileName + '.txt';
+      } else if (kind === 'csv') {
+        blob = DataIO.exportCsv(state.normalized);
+        name = state.fileName + '.csv';
+      } else {
+        blob = DataIO.exportXlsx(state.normalized);
+        name = state.fileName + '.xlsx';
+      }
+      DataIO.download(blob, name);
+      setStatus($('saveStatus'), 'Скачан файл ' + name + ' (' + blob.size + ' байт).', 'ok');
+      log('Экспорт: ' + name + ', ' + blob.size + ' байт, тип ' + blob.type);
+    } catch (e) {
+      setStatus($('saveStatus'), 'Ошибка экспорта: ' + e.message, 'err');
+      log('Ошибка экспорта: ' + e.message);
+    }
+  }
+
+  // --- Обработчики -----------------------------------------------------------
+  var drop = $('drop');
+  $('file').addEventListener('change', function (ev) {
+    handleFile(ev.target.files && ev.target.files[0]);
+  });
+  drop.addEventListener('click', function () { $('file').click(); });
+  ['dragenter', 'dragover'].forEach(function (type) {
+    drop.addEventListener(type, function (ev) {
+      ev.preventDefault();
+      drop.classList.add('over');
+    });
+  });
+  ['dragleave', 'drop'].forEach(function (type) {
+    drop.addEventListener(type, function (ev) {
+      ev.preventDefault();
+      drop.classList.remove('over');
+    });
+  });
+  drop.addEventListener('drop', function (ev) {
+    var file = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0];
+    handleFile(file);
+  });
+
+  $('demo').addEventListener('click', function () {
+    try {
+      state.parsed = showDemoData();
+      state.fileName = 'demo';
+      setStatus($('status'),
+        'Демо-данные: ' + state.parsed.columns.length + ' колонки, ' +
+        state.parsed.columns[0].values.length + ' строк, десятичная запятая.', 'ok');
+      log('Загружены демо-данные (строки в формате CSV с «;» и десятичной запятой).');
+      render();
+    } catch (e) {
+      setStatus($('status'), 'Ошибка демо-данных: ' + e.message, 'err');
+    }
+  });
+
+  $('clear').addEventListener('click', function () {
+    state.parsed = null;
+    state.normalized = null;
+    $('file').value = '';
+    setStatus($('status'), 'Файл не выбран.', '');
+    setStatus($('saveStatus'), 'Сначала загрузите файл или нажмите «Демо-данные».', '');
+    log('Состояние очищено.');
+    render();
+  });
+
+  $('saveTxt').addEventListener('click', function () { save('txt'); });
+  $('saveCsv').addEventListener('click', function () { save('csv'); });
+  $('saveXlsx').addEventListener('click', function () { save('xlsx'); });
+
+  log('DataIO версии ' + DataIO.version + ' загружен. API: ' +
+    Object.keys(DataIO).filter(function (k) { return k !== '_internal'; }).join(', '));
+})();
+</script>
+</body>
+</html>
