@@ -1,33 +1,69 @@
+/* ------- Переменные ------- */
+:root {
+  /* Основные цвета */
+  --bg-color: #f3f5fa; /* фон страницы, header, footer */
+  --text-color: #1f1e0a; /* основной цвет текста */
+  --accent-color: #567ac4; /* акцент (границы header/footer) */
+  --card-bg: #fff; /* fff */
+  --input-bg: #ffffff; /* фон полей ввода */
+  --border-color: #e2e8f0; /* стандартные границы */
+  --border-light: #ddd; /* таблицы */
+  --border-lighter: #eee; /* строки таблиц */
+  --heading-color: #2c3e2f; /* цвет заголовков h3 в карточках */
+
+  /* Таблицы коэффициентов */
+  --th-bg: #f0f2f0; /* фон заголовков таблиц */
+  --th-border: #ddd;
+
+  /* Кнопки */
+  --button-bg: #f0f2f0;
+  --button-bg-hover: #e6e7e6;
+  --button-bg-active: #d9dad9;
+
+  /* Тумблеры */
+  --toggle-off: #ccc;
+  --toggle-on: #567ac4;
+  --toggle-knob: #fff;
+
+  /* Фокус */
+  --focus-border: #6891bc;
+
+  /* Тени */
+  --shadow-soft: 0 2px 5px rgba(0, 0, 0, 0.05);
+
+  /* Прочее */
+  --output-border: #ededed;
+}
+
 /* ------- Общие настройки ------- */
 * {
   box-sizing: border-box;
 }
 
 body {
+  font-size: 15px;
   margin: 0;
   padding: 0;
-  background-color: #f9faf9;
-  color: #1f1e0a;
+  background-color: var(--bg-color);
+  color: var(--text-color);
   font-family: "Century Gothic", "Cambria", serif;
-  font-size: 16px;
 }
 
 header {
   position: fixed;
   top: 0;
   width: 100%;
-  height: 52px;
-  background-color: #f9faf9;
-  border-bottom: 2px solid #806edc;
+  height: 40px;
+  background-color: var(--bg-color);
+  border-bottom: 2px solid var(--accent-color);
   z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-soft);
 }
 
 header h1 {
-  font-size: 1.4rem;
   margin: 0;
   font-weight: 500;
   letter-spacing: 0.5px;
@@ -35,24 +71,28 @@ header h1 {
 
 article {
   margin: 80px auto 40px;
-  max-width: 1200px;
-  padding: 0 20px;
+  max-width: 2000px;
+  padding: 0 clamp(16px, 2vw, 40px);
 }
 
-footer {
-  text-align: center;
-  padding: 5px;
-  font-size: 13px;
-  border-top: 1px solid #806edc;
-  background-color: #f9faf9;
-  margin-top: 40px;
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 28px;
+  align-items: start;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 /* ------- Карты ------- */
 .card {
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+
   padding: 15px 26px;
   margin-bottom: 28px;
   transition: all 0.2s;
@@ -62,65 +102,171 @@ footer {
   margin-top: 18px;
   margin-bottom: 10px;
   font-weight: 500;
-  color: #2c3e2f;
-  font-size: 1.3rem;
+  color: var(--heading-color);
 }
 
 .card h3:first-of-type {
   margin-top: 0;
 }
 
-/* ------- Параметры ------- */
-.param {
+/* ============================== Уравнения ============================== */
+.equ-group {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-.param label {
-  font-size: 20px;
-  font-weight: normal;
-}
-
-.param input {
-  width: 80px;
-  padding: 8px 10px;
-  font-size: 20px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background: #fcfffd;
-  transition: 0.2s;
-}
-
-/* ------- Формулы ------- */
-.formula-group {
-  display: flex;
-  align-items: center;
   margin-bottom: 18px;
   gap: 15px;
   width: 100%;
   flex-wrap: wrap;
+  flex-direction: column;
 }
 
-.formula-input {
-  flex: 1;
-  min-width: 250px;
-  padding: 8px 10px;
-  font-size: 20px;
-  border: 1px solid #ccc;
+.equ-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.noise-field {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.noise-input {
+  width: 70px;
+  padding: 7px 6px;
+  border: 1px solid var(--border-color);
   border-radius: 6px;
-  background: #fcfffd;
+  background: var(--input-bg);
+  font-family: inherit;
+  text-align: center;
+}
+
+.equ-input {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--input-bg);
   transition: 0.2s;
   font-family: "Century Gothic", "Cambria", serif;
 }
 
+/* ============================== Файлы + N + кнопки ============================== */
+.form-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.row-label {
+  min-width: 120px;
+}
+
+.file-input {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--input-bg);
+}
+
+.file-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #777;
+}
+
+.text-input,
+.num-input {
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--input-bg);
+  font-family: inherit;
+  transition: 0.2s;
+}
+
+.text-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.num-input {
+  width: 70px;
+}
+
+.calc-button-group {
+  margin-bottom: 6px;
+}
+
+.calc-button-group .row-label {
+  min-width: 0;
+}
+
+.btn {
+  background: var(--button-bg);
+  border: none;
+  color: var(--text-color);
+  padding: 7px 14px;
+  border-radius: 15px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: 0.2s;
+}
+
+.btn:hover {
+  background: var(--button-bg-hover);
+}
+
+.btn:active {
+  background: var(--button-bg-active);
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: var(--accent-color);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: #4a6cb0;
+}
+
+.btn-primary:active {
+  background: #3f5c99;
+}
+
+.status {
+  margin: 10px 0 0;
+  min-height: 1.2em;
+  color: #4a6a4a;
+}
+
+.status.error {
+  color: #b33a3a;
+}
+
+.empty-note {
+  margin: 0;
+  color: #aaa;
+}
+
 /* ------- Коэффициенты ------- */
 .coeff-group {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 15px;
-  margin-top: 20px;
 }
 
 .coeff-panel {
@@ -128,18 +274,11 @@ footer {
   flex-direction: column;
   gap: 10px;
   padding: 12px 14px;
-  background: #fcfffd;
-  border: 1px solid #ccc;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   box-sizing: border-box;
   min-width: 0;
-}
-
-.coeff-panel h4 {
-  margin: 0;
-  font-weight: 500;
-  text-align: center;
-  font-size: 1.05rem;
 }
 
 .coeff-table {
@@ -148,52 +287,48 @@ footer {
   border-collapse: collapse;
 }
 
+.coeff-table th:first-child,
+.coeff-table td:first-child {
+  width: 40px;
+}
+
+.coeff-table th:last-child,
+.coeff-table td:last-child {
+  width: 38%;
+}
+
+.lambda-row td {
+  border-top: 1px solid var(--th-border);
+}
+
 .coeff-table th {
   padding: 6px 4px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--th-border);
   text-align: center;
-  font-size: 0.85rem;
   font-weight: normal;
-  background-color: #f0f2f0;
+  background-color: var(--th-bg);
 }
 
 .coeff-table td {
   padding: 4px 4px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-lighter);
   text-align: center;
-  font-size: 15px;
 }
 
 .coeff-table input {
   width: 100%;
-  max-width: 70px;
+  max-width: 64px;
   padding: 6px 0;
   border-radius: 5px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-light);
   text-align: center;
-  font-size: 15px;
   transition: 0.2s;
 }
 
 /* ------- График ------- */
-.graph-group {
-  margin-top: 22px;
-}
-
-.graph-panel {
-  width: 100%;
-}
-
-.graph-panel h3 {
-  margin-top: 0;
-  margin-bottom: 12px;
-  font-weight: 500;
-  font-size: 1.3rem;
-}
-
 .graf {
   width: 100% !important;
-  height: 400px;
+  height: clamp(380px, 55vh, 800px);
   display: block;
   position: relative;
 }
@@ -203,40 +338,11 @@ textarea {
   width: 100%;
   padding: 12px;
   border-radius: 6px;
-  border: 1px solid #ccc;
-  background: #fcfffd;
+  border: 1px solid var(--border-color);
+  background: var(--input-bg);
   resize: vertical;
   transition: 0.2s;
-  font-size: 0.95rem;
   font-family: inherit;
-}
-
-#generated-data-output {
-  border-radius: 5px;
-  border: 1px solid #ededed;
-  padding: 5px;
-}
-
-.copy_button {
-  background: #f0f2f0;
-  border: none;
-  color: #1f1e0a;
-  padding: 5px 14px;
-  border-radius: 15px;
-  cursor: pointer;
-  font-size: 0.8rem;
-  margin-top: 10px;
-  transition: 0.2s;
-}
-
-.copy_button:hover {
-  background: #e6e7e6;
-  transform: scale(0.98);
-}
-
-.copy_button:active {
-  background: #d9dad9;
-  transform: scale(0.95);
 }
 
 /* ------- Тумблеры ------- */
@@ -268,7 +374,7 @@ textarea {
   position: absolute;
   cursor: pointer;
   inset: 0;
-  background-color: #ccc;
+  background-color: var(--toggle-off);
   transition: 0.3s;
   border-radius: 34px;
 }
@@ -280,13 +386,13 @@ textarea {
   width: 20px;
   left: 3px;
   bottom: 3px;
-  background-color: white;
+  background-color: var(--toggle-knob);
   transition: 0.3s;
   border-radius: 50%;
 }
 
 .toggle-switch input:checked + .toggle-slider {
-  background-color: #567ac4;
+  background-color: var(--toggle-on);
 }
 
 .toggle-switch input:checked + .toggle-slider:before {
@@ -295,7 +401,7 @@ textarea {
 
 /* ------- Фокусировка ------- */
 body :focus {
-  border-color: #6891bc;
+  border-color: var(--focus-border);
   outline: none;
 }
 
@@ -316,9 +422,55 @@ input[type="number"] {
   appearance: textfield;
 }
 
-/* ------- Медиа-запрос ------- */
-@media (max-width: 820px) {
-  .coeff-group {
-    grid-template-columns: 1fr;
+.ci {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.pm {
+  line-height: 1;
+}
+
+.pm-vals {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+
+@media (max-width: 1000px) {
+  .layout {
+    display: flex;
+    flex-direction: column;
   }
+
+  .col {
+    display: contents;
+  }
+
+  #equation-card { order: 1; }
+  #file-card { order: 2; }
+  #graph-card { order: 3; }
+  #coeff-card { order: 4; }
+}
+
+h1,
+h2,
+h3,
+h4,
+input,
+button,
+textarea,
+select,
+.pm,
+.pm-vals,
+.graf {
+  font-size: 15px;
+}
+
+.graf table,
+.graf .legend table {
+  font-size: 15px !important;
 }

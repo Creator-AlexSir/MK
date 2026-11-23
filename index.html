@@ -8,171 +8,142 @@
   </head>
   <body>
     <header>
-      <h1>Стохастическая модель</h1>
+      <h1>Учебный тренажер ...</h1>
     </header>
 
-    <article>
-      <!-- ============================== Карта с расчетом ============================== -->
-      <div class="card" id="calc-card">
-        <h3>Параметры модели</h3>
-        <!--  =============== Парамеры =============== -->
-        <div class="param">
-          <label for="N">N:</label>
-          <input
-            type="number"
-            id="N"
-            class="param-input"
-            value="20"
-            max="1000"
-            oninput="if (parseFloat(this.value) > 1000) this.value = 1000;"
-          />
-          <label for="Wt">Wₜ:</label>
-          <input
-            type="number"
-            id="Wt"
-            class="param-input"
-            value="1"
-            step="0.1"
-            max="90000"
-            oninput="if (parseFloat(this.value) > 90000) this.value = 90000;"
-          />
-          <label for="x0-input">X₀:</label>
-          <input
-            type="number"
-            id="X0"
-            class="param-input"
-            value="0"
-            step="0.1"
-            max="90000"
-            oninput="if (parseFloat(this.value) > 90000) this.value = 90000;"
-          />
-        </div>
-
-        <!-- =============== Формулы =============== -->
+    <article class="layout">
+      
+      <div class="col col-left">
+      
+      <section class="card" id="equation-card">
         <h3>Уравнения модели</h3>
 
-        <div class="formula-group">
-          <input
-            type="text"
-            id="formula-x"
-            class="formula-input"
-            placeholder="x[t] ="
-            list="models-x"
-          />
-          <input
-            type="text"
-            id="formula-y"
-            class="formula-input"
-            placeholder="y[t] ="
-            list="models-y"
-          />
-          <input
-            type="text"
-            id="formula-z"
-            class="formula-input"
-            placeholder="z[t] ="
-            list="models-z"
-          />
+        <div class="equ-group">
+          <div class="equ-row" id="row-x">
+            <input
+              type="text"
+              id="formula-x"
+              class="equ-input"
+              placeholder="xₜ = "
+              list="models-x"
+            />
+            <label class="noise-field" title="Множитель шума λ для x">
+              λ<sub>x</sub>
+              <input type="number" id="noise-x" class="noise-input" value="0" min="0" step="0.01" />
+            </label>
+          </div>
+
+          <div class="equ-row hidden" id="row-y">
+            <input
+              type="text"
+              id="formula-y"
+              class="equ-input"
+              placeholder="yₜ = "
+              list="models-y"
+            />
+            <label class="noise-field" title="Множитель шума λ для y">
+              λ<sub>y</sub>
+              <input type="number" id="noise-y" class="noise-input" value="0" min="0" step="0.01" />
+            </label>
+          </div>
+
+          <div class="equ-row hidden" id="row-z">
+            <input
+              type="text"
+              id="formula-z"
+              class="equ-input"
+              placeholder="zₜ = "
+              list="models-z"
+            />
+            <label class="noise-field" title="Множитель шума λ для z">
+              λ<sub>z</sub>
+              <input type="number" id="noise-z" class="noise-input" value="0" min="0" step="0.01" />
+            </label>
+          </div>
 
           <datalist id="models-x">
             <option value="x[t] = a0 + a1*t + a2*t^2"></option>
             <option value="x[t] = a0 + a1*t^2"></option>
             <option value="x[t] = a0 + a1 * sqrt(t)"></option>
             <option value="x[t] = a0 + a1 * x[t-1] + a2 * x[t-2]"></option>
+            <option value="x[t] = a0 + a1*x[t-1] + a2*y[t-1]^2"></option>
           </datalist>
 
           <datalist id="models-y">
-            <option value="y[t] = b0 + b1*t + b2*t^2"></option>
-            <option value="y[t] = b0 + b1*x[t] + b2*t"></option>
-            <option value="y[t] = b0 + b1*x[t] + b2*x[t-1]"></option>
-            <option value="y[t] = b0 + b1*y[t-1] + b2*x[t]"></option>
+            <option value="y[t] = a3 + a4*t + a5*t^2"></option>
+            <option value="y[t] = a3 + a4*x[t] + a5*t"></option>
+            <option value="y[t] = a3 + a4*x[t] + a5*x[t-1]"></option>
+            <option value="y[t] = a3 + a4*y[t-1] + a5*x[t]"></option>
+            <option value="y[t] = a3 + a4*x[t-1]*y[t-1]"></option>
           </datalist>
 
           <datalist id="models-z">
-            <option value="z[t] = c0 + c1*t + c2*t^2"></option>
-            <option value="z[t] = c0 + c1*y[t] + c2*x[t]"></option>
-            <option value="z[t] = c0 + c1*x[t] + c2*y[t]"></option>
-            <option value="z[t] = c0 + c1*z[t-1] + c2*y[t]"></option>
+            <option value="z[t] = a6 + a7*t + a8*t^2"></option>
+            <option value="z[t] = a6 + a7*y[t] + a8*x[t]"></option>
+            <option value="z[t] = a6 + a7*x[t] + a8*y[t]"></option>
+            <option value="z[t] = a6 + a7*z[t-1] + a8*y[t]"></option>
           </datalist>
         </div>
+      </section>
 
-        <!-- =============== Коэффициенты =============== -->
-        <div class="coeff-group">
-          <!-- Таблица x -->
-          <div class="coeff-panel">
-            <h4>Коэффициенты модели x[t]</h4>
-            <table class="coeff-table" id="x-table">
-              <thead>
-                <tr>
-                  <th>Коэфф.</th>
-                  <th>Теор.</th>
-                  <th>Расчетный</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-
-          <!-- Таблица y -->
-          <div class="coeff-panel">
-            <h4>Коэффициенты модели y[t]</h4>
-            <table class="coeff-table" id="y-table">
-              <thead>
-                <tr>
-                  <th>Коэфф.</th>
-                  <th>Теор.</th>
-                  <th>Расчетный</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-
-          <!-- Таблица z -->
-          <div class="coeff-panel">
-            <h4>Коэффициенты модели z[t]</h4>
-            <table class="coeff-table" id="z-table">
-              <thead>
-                <tr>
-                  <th>Коэфф.</th>
-                  <th>Теор.</th>
-                  <th>Расчетный</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- =============== График =============== -->
-        <div class="graph-group">
-          <div class="graph-panel">
-            <h3>График модели</h3>
-            <div id="graf" class="graf"></div>
-          </div>
-        </div>
+      <section class="card" id="coeff-card">
+        <h3>Коэффициенты</h3>
+        <div class="coeff-group" id="coeff-group"></div>
+      </section>
       </div>
 
-      <!-- ============================== Карта с расчитанными данными ============================== -->
-      <div class="card" id="direct-card">
-        <div class="toggle-header">
-          <h3>Рассчитанные по коэффициентам данные</h3>
-          <label class="toggle-switch">
-            <input type="checkbox" id="toggle-direct" checked />
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-        <div id="direct-content">
-          <div class="matrix-preview" style="margin-top: 14px">
-            <div><b>x:</b> <span id="gen-x"></span></div>
-            <div><b>y:</b> <span id="gen-y"></span></div>
-            <div><b>z:</b> <span id="gen-z"></span></div>
+      <div class="col col-right">
+      
+      <section class="card" id="file-card">
+        <div class="form-row">
+          <span class="row-label">Данные из файла</span>
+          <div class="file-input">
+            <span class="file-name" id="file-name">файл не выбран</span>
+            <button type="button" class="btn" id="file-btn">Выбрать…</button>
+            <input
+              type="file"
+              class="hidden"
+              id="hidden-file-input"
+              accept=".txt,.csv,text/plain"
+            />
           </div>
-          <button class="copy_button" id="copy_1">Копировать</button>
         </div>
+
+        <div class="form-row">
+          <label class="row-label" for="save-name">Сохранить ряды в</label>
+          <input
+            type="text"
+            id="save-name"
+            class="text-input"
+            placeholder="series.txt (пусто — не сохранять)"
+          />
+        </div>
+
+        <div class="form-row calc-button-group">
+          <label class="row-label" for="N">N:</label>
+          <input
+            type="number"
+            id="N"
+            class="num-input"
+            value="20"
+            min="3"
+            max="1000"
+            oninput="if (parseFloat(this.value) > 1000) this.value = 1000;"
+          />
+          <button type="button" class="btn btn-primary" id="btn-calc">Рассчитать</button>
+          <button type="button" class="btn btn-primary" id="btn-gen">Сгенерировать</button>
+        </div>
+
+        <p class="status" id="status"></p>
+      </section>
+
+      <section class="card" id="graph-card">
+        <h3>График</h3>
+        <div id="graf" class="graf"></div>
+      </section>
       </div>
 
-      <!-- ============================== Карта для ввода данных ============================== -->
+      <!-- Данные для расчета коэффициентов (отключено; ряды хранятся в dataText, main.js)
       <div class="card" id="data-card">
         <div class="toggle-header">
           <h3>Данные для расчета коэффициентов (x, y, z — по строкам)</h3>
@@ -189,11 +160,8 @@
           ></textarea>
         </div>
       </div>
+      -->
     </article>
-
-    <footer>
-      <p>© 2026 Лаборатория</p>
-    </footer>
 
     <script src="jquery.js"></script>
     <script src="jquery.flot.js"></script>
