@@ -986,6 +986,349 @@ function plotGraph() {
   }
 }
 
+/* ======================================================================
+   Режим «Дифференциальные уравнения · Рунге–Кутта»
+   Движок лежит в rk4.js (window.RK4), здесь только интерфейс и графики.
+   ====================================================================== */
+
+const rkPresetSelect = el("rk-preset");
+const rkParamFields = el("rk-param-fields");
+const rkFormulaNoteEl = el("rk-formula-note");
+const rkCustomDetails = el("rk-custom-system");
+const rkEqInputs = { x: el("rk-eq-x"), y: el("rk-eq-y"), z: el("rk-eq-z") };
+const rkInitialInputs = { x: el("rk-x0"), y: el("rk-y0"), z: el("rk-z0") };
+const rkDtInput = el("rk-dt");
+const rkTInput = el("rk-T");
+const rkSaveNameInput = el("rk-save-name");
+const rkStatusEl = el("rk-status");
+
+const rkState = { series: null, t: null, dt: 0, presetId: "lorenz" };
+let rkParamInputs = [];
+let phase3d = null;
+let currentMode = "mnk";
+
+function setRkStatus(msg, isError = false) {
+  if (!rkStatusEl) return;
+  rkStatusEl.textContent = msg;
+  rkStatusEl.classList.toggle("error", isError);
+}
+
+function rkFormulaNote(preset) {
+  if (!rkFormulaNoteEl) return;
+  if (!preset) {
+    rkFormulaNoteEl.textContent = "Своя система: задайте уравнения dx/dt, dy/dt, dz/dt в блоке ниже.";
+    return;
+  }
+  rkFormulaNoteEl.textContent =
+    `dx/dt = ${preset.equations.x};   ` +
+    `dy/dt = ${preset.equations.y};   ` +
+    `dz/dt = ${preset.equations.z}`;
+}
+
+function buildRkParamFields(params) {
+  rkParamInputs = [];
+  if (!rkParamFields) return;
+  rkParamFields.innerHTML = "";
+  if (!params || !params.length) return;
+  const row = document.createElement("div");
+  row.className = "form-row";
+  const caption = document.createElement("span");
+  caption.className = "row-label";
+  caption.textContent = "Параметры";
+  row.appendChild(caption);
+  for (const param of params) {
+    const label = document.createElement("label");
+    label.className = "rk-small-field";
+    label.appendChild(document.createTextNode(param.label + " "));
+    const input = document.createElement("input");
+    input.type = "number";
+    input.className = "num-input rk-num";
+    input.step = "any";
+    input.value = param.default;
+    input.title = `Параметр ${param.key}`;
+    input.addEventListener("input", onRkInputChanged);
+    label.appendChild(input);
+    row.appendChild(label);
+    rkParamInputs.push({ key: param.key, input });
+  }
+  rkParamFields.appendChild(row);
+}
+
+function applyRkPreset(id) {
+  if (typeof RK4 === "undefined" || !RK4.presets) return;
+  rkState.presetId = id;
+  if (rkPresetSelect && rkPresetSelect.value !== id) rkPresetSelect.value = id;
+  if (id === "custom") {
+    // Параметры не сбрасываем: в своих уравнениях можно продолжать
+    // использовать имена sigma/rho/beta или a/b/c.
+    rkFormulaNote(null);
+    if (rkCustomDetails) rkCustomDetails.open = true;
+    return;
+  }
+  const preset = RK4.presets[id];
+  if (!preset) return;
+  for (const comp of COMPONENTS) {
+    if (rkEqInputs[comp]) rkEqInputs[comp].value = preset.equations[comp] || "";
+  }
+  buildRkParamFields(preset.params);
+  rkFormulaNote(preset);
+  if (rkCustomDetails) rkCustomDetails.open = false;
+  if (preset.initial) {
+    for (const comp of COMPONENTS) {
+      if (rkInitialInputs[comp] && preset.initial[comp] !== undefined) {
+        rkInitialInputs[comp].value = preset.initial[comp];
+      }
+    }
+  }
+  setRkStatus("");
+}
+
+function readRkNumber(input, label) {
+  const value = input ? parseFloat(input.value) : NaN;
+  if (!Number.isFinite(value)) throw new Error(`${label}: введите число.`);
+  return value;
+}
+
+function invalidateRkResult() {
+  rkState.series = null;
+  rkState.t = null;
+}
+
+// Любое изменение условий расчёта делает старый ряд неактуальным.
+function onRkInputChanged() {
+  if (!rkState.series) return;
+  invalidateRkResult();
+  setRkStatus("Параметры изменены — нажмите «Рассчитать».");
+  plotRk4();
+}
+
+function rkEquations() {
+  const out = {};
+  for (const comp of COMPONENTS) {
+    out[comp] = rkEqInputs[comp] ? rkEqInputs[comp].value.trim() : "";
+  }
+  return out;
+}
+
+function rkParamValues() {
+  const out = {};
+  for (const item of rkParamInputs) {
+    const value = parseFloat(item.input.value);
+    if (!Number.isFinite(value)) throw new Error(`Параметр ${item.key}: введите число.`);
+    out[item.key] = value;
+  }
+  return out;
+}
+
+function calculateRk4() {
+  if (typeof RK4 === "undefined" || !RK4.integrate) {
+    setRkStatus("Модуль расчёта rk4.js не загружен.", true);
+    return;
+  }
+  try {
+    const presetId = rkPresetSelect ? rkPresetSelect.value : "custom";
+    const equations = rkEquations();
+    const params = rkParamValues();
+    const initial = {
+      x: readRkNumber(rkInitialInputs.x, "x₀"),
+      y: readRkNumber(rkInitialInputs.y, "y₀"),
+      z: readRkNumber(rkInitialInputs.z, "z₀"),
+    };
+    const dt = readRkNumber(rkDtInput, "Шаг dt");
+    const totalTime = readRkNumber(rkTInput, "Время T");
+    if (!(dt > 0)) throw new Error("Шаг dt должен быть больше нуля.");
+    if (!(totalTime > 0)) throw new Error("Время T должно быть больше нуля.");
+    const steps = Math.round(totalTime / dt);
+    if (!(steps >= 1)) throw new Error("Слишком маленькое время T для выбранного шага dt.");
+    if (steps > 200000) throw new Error("Слишком много шагов: уменьшите T или увеличьте dt.");
+
+    const paramKeys = rkParamInputs.map((p) => p.key);
+    for (const comp of COMPONENTS) {
+      if (!equations[comp]) throw new Error(`Уравнение d${comp}/dt пустое.`);
+      const error = RK4.validateEquation(equations[comp], paramKeys);
+      if (error) throw new Error(`d${comp}/dt: ${error}`);
+    }
+
+    const result = RK4.integrate({ equations, params, initial, dt, steps });
+    if (!result || !result.series) throw new Error("Движок не вернул решение.");
+    rkState.series = result.series;
+    rkState.t = result.t || result.series.x.map((_, i) => i * dt);
+    rkState.dt = dt;
+    rkState.presetId = presetId;
+
+    const points = result.series.x.length;
+    setRkStatus(
+      `Решение рассчитано: ${points} точек (dt = ${dt}, T = ${totalTime}), метод Рунге–Кутты 4-го порядка.`,
+    );
+    plotRk4();
+  } catch (err) {
+    invalidateRkResult();
+    setRkStatus(err && err.message ? err.message : String(err), true);
+    plotRk4();
+  }
+}
+
+function saveRk4Series() {
+  if (!rkState.series) {
+    setRkStatus("Сначала нажмите «Рассчитать», чтобы получить ряд.", true);
+    return;
+  }
+  let name = rkSaveNameInput ? rkSaveNameInput.value.trim() : "";
+  if (!name) {
+    const presetPart = rkState.presetId === "custom" ? "custom" : rkState.presetId;
+    name = `rk4-${presetPart}-${rkState.series.x.length}.txt`;
+  }
+  const text = seriesToText(rkState.series, COMPONENTS, 6);
+  const savedName = downloadText(name, text);
+  setRkStatus(
+    `Ряд сохранён в файл «${savedName}». Откройте вкладку «Временные ряды · МНК» и загрузите этот файл.`,
+  );
+}
+
+function rkPlotOptions(extra) {
+  const font = { size: 15, family: "Century Gothic, Cambria, serif" };
+  const options = {
+    grid: { hoverable: true, borderWidth: 1, borderColor: "#ddd", minBorderMargin: 10 },
+    legend: { position: "ne" },
+    xaxis: { font },
+    yaxis: { font },
+  };
+  return Object.assign(options, extra || {});
+}
+
+function plotRk4() {
+  if (typeof $ === "undefined" || !$.plot) return;
+  const series = rkState.series;
+
+  const datasets = [];
+  if (series && rkState.t) {
+    for (const comp of COMPONENTS) {
+      const values = series[comp] || [];
+      datasets.push({
+        label: `${comp}(t)`,
+        data: rkState.t.map((time, i) => [time, values[i]]),
+        color: COLORS[comp].data,
+        lines: { show: true, lineWidth: 2 },
+        points: { show: false },
+      });
+    }
+  }
+  const seriesOptions = rkPlotOptions();
+  if (!datasets.length) {
+    seriesOptions.xaxis.min = 0;
+    seriesOptions.xaxis.max = 1;
+    seriesOptions.yaxis.min = -1;
+    seriesOptions.yaxis.max = 1;
+  }
+  try {
+    $.plot($("#rk-graf"), datasets, seriesOptions);
+  } catch (err) {
+    console.warn(err);
+  }
+
+  const phase = [];
+  if (series) {
+    for (let i = 0; i < (series.x || []).length; i++) phase.push([series.x[i], series.y[i]]);
+  }
+  const phaseOptions = rkPlotOptions({ legend: { show: false } });
+  if (!phase.length) {
+    phaseOptions.xaxis.min = -1;
+    phaseOptions.xaxis.max = 1;
+    phaseOptions.yaxis.min = -1;
+    phaseOptions.yaxis.max = 1;
+  }
+  try {
+    $.plot(
+      $("#rk-phase"),
+      [
+        {
+          label: "x–y",
+          data: phase,
+          color: COLORS.x.data,
+          lines: { show: true, lineWidth: 2 },
+          points: { show: false },
+        },
+      ],
+      phaseOptions,
+    );
+  } catch (err) {
+    console.warn(err);
+  }
+
+  if (phase3d) phase3d.setData(series || null);
+}
+
+function setMode(mode) {
+  const isRk = mode === "rk4";
+  currentMode = isRk ? "rk4" : "mnk";
+  const tabMnk = el("tab-mode-mnk");
+  const tabRk = el("tab-mode-rk4");
+  if (tabMnk) {
+    tabMnk.classList.toggle("active", !isRk);
+    if (tabMnk.setAttribute) tabMnk.setAttribute("aria-selected", String(!isRk));
+  }
+  if (tabRk) {
+    tabRk.classList.toggle("active", isRk);
+    if (tabRk.setAttribute) tabRk.setAttribute("aria-selected", String(isRk));
+  }
+  const modeMnk = el("mode-mnk");
+  const modeRk = el("mode-rk4");
+  if (modeMnk) modeMnk.classList.toggle("hidden", isRk);
+  if (modeRk) modeRk.classList.toggle("hidden", !isRk);
+  if (isRk && phase3d) phase3d.resize();
+  // flot при переключении вкладки нужно перерисовать в видимом контейнере
+  if (isRk) plotRk4();
+  else plotGraph();
+}
+
+function initRk4UI() {
+  if (typeof RK4 === "undefined" || !RK4.presets) {
+    setRkStatus("Модуль расчёта rk4.js не загружен.", true);
+    return;
+  }
+  if (typeof RK3D !== "undefined" && RK3D.Phase3D) {
+    const canvas = el("rk-3d");
+    if (canvas) phase3d = new RK3D.Phase3D(canvas);
+  }
+  if (rkPresetSelect) {
+    rkPresetSelect.addEventListener("change", function () {
+      invalidateRkResult();
+      applyRkPreset(this.value);
+      plotRk4();
+    });
+  }
+  for (const comp of COMPONENTS) {
+    const input = rkEqInputs[comp];
+    if (!input) continue;
+    input.addEventListener("input", function () {
+      if (rkPresetSelect && rkPresetSelect.value !== "custom") {
+        rkPresetSelect.value = "custom";
+        rkState.presetId = "custom";
+        rkFormulaNote(null);
+        if (rkCustomDetails) rkCustomDetails.open = true;
+      }
+      invalidateRkResult();
+    });
+  }
+  const calcButton = el("rk-btn-calc");
+  if (calcButton) calcButton.addEventListener("click", calculateRk4);
+  const saveButton = el("rk-btn-save");
+  if (saveButton) saveButton.addEventListener("click", saveRk4Series);
+  for (const input of [
+    rkInitialInputs.x,
+    rkInitialInputs.y,
+    rkInitialInputs.z,
+    rkDtInput,
+    rkTInput,
+  ]) {
+    if (input) input.addEventListener("input", onRkInputChanged);
+  }
+
+  const initialPreset = rkPresetSelect ? rkPresetSelect.value || "lorenz" : "lorenz";
+  if (rkPresetSelect) rkPresetSelect.value = initialPreset;
+  applyRkPreset(initialPreset);
+}
+
 function setStatus(msg, isError = false) {
   statusEl.textContent = msg;
   statusEl.classList.toggle("error", isError);
@@ -1214,6 +1557,11 @@ fileInput.addEventListener("change", onFileChosen);
 el("btn-gen").addEventListener("click", onGenerate);
 el("btn-calc").addEventListener("click", onCalculate);
 
+const rkTabMnk = el("tab-mode-mnk");
+const rkTabRk = el("tab-mode-rk4");
+if (rkTabMnk) rkTabMnk.addEventListener("click", () => setMode("mnk"));
+if (rkTabRk) rkTabRk.addEventListener("click", () => setMode("rk4"));
+
 document.addEventListener("wheel", function () {
   if (document.activeElement && document.activeElement.type === "number") {
     document.activeElement.blur();
@@ -1223,7 +1571,10 @@ document.addEventListener("wheel", function () {
 let resizeTimer;
 window.addEventListener("resize", () => {
   clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(plotGraph, 150);
+  resizeTimer = setTimeout(() => {
+    if (currentMode === "rk4") plotRk4();
+    else plotGraph();
+  }, 150);
 });
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -1231,5 +1582,7 @@ window.addEventListener("DOMContentLoaded", () => {
     formulaInputs[c].value = "";
     lambdas[c] = parseFloat(noiseInputs[c].value) || 0;
   });
+  if (typeof RK4 !== "undefined") initRk4UI();
+  setMode("mnk");
   refreshUI();
 });

@@ -766,3 +766,464 @@ select,
 .graf .legend table {
   font-size: 15px !important;
 }
+
+/* ============================== Вкладки режимов ============================== */
+/* Панель вкладок идёт сразу под фиксированной шапкой (40px) и прилипает к ней
+   при прокрутке. Ширина/отступы повторяют article, чтобы вкладки были
+   выровнены с карточками. */
+.mode-tabs {
+  position: sticky;
+  top: 40px;
+  z-index: 8;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 2000px;
+  margin: 40px auto 0;
+  padding: 10px clamp(16px, 2vw, 36px);
+  background: var(--bg-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.mode-tab {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--card-bg);
+  color: #4a5568;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: var(--shadow-soft);
+  transition: background-color 0.18s ease, border-color 0.18s ease,
+    color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+}
+
+.mode-tab:hover {
+  border-color: var(--accent-color);
+  color: #33507f;
+  box-shadow: var(--shadow-hover);
+}
+
+.mode-tab:active {
+  transform: translateY(1px);
+}
+
+.mode-tab:focus-visible {
+  outline: 2px solid var(--focus-border);
+  outline-offset: 2px;
+}
+
+.mode-tab.active,
+.mode-tab[aria-selected="true"] {
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(86, 122, 196, 0.28);
+}
+
+.mode-tab.active:hover,
+.mode-tab[aria-selected="true"]:hover {
+  background: #4a6cb0;
+  border-color: #4a6cb0;
+  color: #fff;
+}
+
+/* Контент режимов: шапка и вкладки уже занимают место сверху, поэтому
+   верхний отступ статьи уменьшен. Одинаковый отступ у обеих вкладок, чтобы
+   при переключении страница не «прыгала». */
+#mode-mnk,
+#mode-rk4 {
+  margin-top: 18px;
+  scroll-margin-top: 104px;
+}
+
+/* ============================== Поля Рунге–Кутта ============================== */
+.select-input {
+  flex: 0 1 auto;
+  min-width: 190px;
+  padding: 8px 34px 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 7px;
+  background-color: var(--input-bg);
+  background-image: linear-gradient(45deg, transparent 50%, #7a8499 50%),
+    linear-gradient(135deg, #7a8499 50%, transparent 50%);
+  background-position: calc(100% - 16px) calc(50% + 1px),
+    calc(100% - 11px) calc(50% + 1px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  color: var(--text-color);
+  font-family: inherit;
+  font-size: 15px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.select-input:hover {
+  border-color: var(--border-strong);
+}
+
+.select-input:focus {
+  border-color: var(--focus-border);
+  background-color: #fff;
+  box-shadow: var(--focus-ring);
+}
+
+/* Своя система уравнений — компактный блок-раскрывашка */
+.custom-system {
+  margin-top: 4px;
+  padding: 4px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  background: #fbfcfe;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.custom-system:hover {
+  border-color: var(--border-strong);
+}
+
+.custom-system[open] {
+  background: #fff;
+  box-shadow: inset 0 1px 2px rgba(31, 42, 68, 0.03);
+}
+
+.custom-system > summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 0;
+  color: #4a5568;
+  font-weight: 500;
+  line-height: 1.3;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+}
+
+.custom-system > summary::-webkit-details-marker {
+  display: none;
+}
+
+.custom-system > summary::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  margin-right: 2px;
+  border-right: 2px solid #7a8499;
+  border-bottom: 2px solid #7a8499;
+  transform: rotate(-45deg);
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+
+.custom-system[open] > summary::before {
+  transform: rotate(45deg);
+  border-color: var(--accent-color);
+}
+
+.custom-system > summary:hover {
+  color: var(--heading-color);
+}
+
+.custom-system > summary:hover::before {
+  border-color: var(--accent-color);
+}
+
+.custom-system > summary:focus-visible {
+  outline: 2px solid var(--focus-border);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.custom-system[open] > summary {
+  border-bottom: 1px solid var(--border-lighter);
+}
+
+.custom-system .equ-group {
+  margin: 14px 0 12px;
+}
+
+.custom-system .equ-label {
+  flex: 0 0 auto;
+  min-width: 3.6em;
+  color: #4a5568;
+  white-space: nowrap;
+}
+
+.custom-system .hint {
+  margin: 0 0 12px;
+}
+
+/* Приглушённые пояснения */
+.hint {
+  margin: 10px 0 0;
+  color: #7a8499;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+/* Пояснение к выбранной системе: id используется в main.js (rkFormulaNote);
+   элемент уже есть в index.html с классом .hint — правило задаёт ему
+   аккуратные отступы между параметрами и блоком «Своя система». */
+#rk-formula-note {
+  margin: 6px 0 12px;
+  color: #7a8499;
+  font-style: italic;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+/* Начальные условия и параметры шага */
+.rk-small-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #55607a;
+  white-space: nowrap;
+}
+
+.rk-small-field .rk-num {
+  text-align: center;
+}
+
+.rk-small-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #4a5568;
+  white-space: nowrap;
+}
+
+.rk-num {
+  width: 70px;
+}
+
+.rk-param-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rk-param-fields:empty {
+  display: none;
+}
+
+.rk-param-fields .form-row {
+  margin-bottom: 0;
+}
+
+.rk-param-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* Подзаголовок перед фазовым портретом */
+.subhead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 18px 0 10px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--heading-color);
+}
+
+.subhead::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 3px;
+  height: 1em;
+  border-radius: 2px;
+  background: var(--accent-color);
+}
+
+/* Фазовый портрет — чуть компактнее основного графика решения */
+.graf-phase {
+  height: clamp(260px, 34vh, 420px);
+  margin-top: 2px;
+}
+
+/* ============================== Адаптивность вкладок ============================== */
+@media (max-width: 1366px) {
+  .mode-tabs {
+    padding: 9px clamp(14px, 1.6vw, 24px);
+  }
+
+  #mode-mnk,
+  #mode-rk4 {
+    margin-top: 16px;
+  }
+}
+
+@media (max-width: 1000px) {
+  #mode-mnk,
+  #mode-rk4 {
+    margin-top: 14px;
+    scroll-margin-top: 96px;
+  }
+
+  .select-input {
+    min-width: 160px;
+  }
+}
+
+@media (max-width: 720px) {
+  /* На узком экране липкая панель вкладок заняла бы слишком много места,
+     поэтому она становится обычной и переносит кнопки в столбик. */
+  .mode-tabs {
+    position: static;
+    margin-top: 40px;
+    padding: 8px 12px;
+    gap: 6px;
+  }
+
+  .mode-tab {
+    flex: 1 1 100%;
+    padding: 8px 10px;
+    border-radius: 10px;
+    white-space: normal;
+    text-align: center;
+  }
+
+  #mode-mnk,
+  #mode-rk4 {
+    margin-top: 12px;
+    scroll-margin-top: 56px;
+  }
+
+  .custom-system {
+    padding: 4px 10px;
+  }
+
+  .custom-system .equ-label {
+    min-width: 3.4em;
+  }
+
+  .select-input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .rk-small-field {
+    flex: 1 1 auto;
+  }
+
+  .rk-small-label {
+    flex: 0 0 auto;
+  }
+
+  .rk-num {
+    width: 64px;
+  }
+
+  .rk-param-fields .form-row {
+    gap: 8px;
+  }
+
+  .subhead {
+    margin: 14px 0 8px;
+  }
+
+  .graf-phase {
+    height: 260px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mode-tabs {
+    padding: 8px 10px;
+  }
+
+  .graf-phase {
+    height: 225px;
+  }
+}
+
+/* ============================== 3D-траектория и малые графики ============================== */
+#rk-3d-card {
+  margin-bottom: 20px;
+}
+
+.rk-3d-wrap {
+  position: relative;
+  width: 100%;
+}
+
+#rk-3d {
+  display: block;
+  width: 100%;
+  height: clamp(320px, 40vh, 460px);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: #fbfcfe;
+  cursor: grab;
+  touch-action: none;
+}
+
+#rk-3d:active {
+  cursor: grabbing;
+}
+
+.rk-3d-wrap + .hint {
+  margin-top: 10px;
+}
+
+.rk-small-graphs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+}
+
+.rk-small-graphs .card {
+  margin-bottom: 20px;
+  min-width: 0;
+}
+
+#rk-graf.graf-rk,
+#rk-phase.graf-rk {
+  height: clamp(210px, 24vh, 300px);
+}
+
+@media (max-width: 1000px) {
+  .rk-small-graphs {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  #rk-3d {
+    height: 340px;
+  }
+}
+
+@media (max-width: 720px) {
+  .rk-small-graphs {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  #rk-3d {
+    height: 300px;
+  }
+
+  #rk-graf.graf-rk,
+  #rk-phase.graf-rk {
+    height: 250px;
+  }
+}

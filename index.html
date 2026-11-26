@@ -11,7 +11,32 @@
       <h1>Учебный тренажёр: стохастическая модель</h1>
     </header>
 
-    <article class="layout">
+    <nav class="mode-tabs" role="tablist" aria-label="Режим работы">
+      <button
+        type="button"
+        class="mode-tab active"
+        id="tab-mode-mnk"
+        role="tab"
+        aria-selected="true"
+        aria-controls="mode-mnk"
+        data-mode="mnk"
+      >
+        Временные ряды · МНК
+      </button>
+      <button
+        type="button"
+        class="mode-tab"
+        id="tab-mode-rk4"
+        role="tab"
+        aria-selected="false"
+        aria-controls="mode-rk4"
+        data-mode="rk4"
+      >
+        Дифференциальные уравнения · Рунге–Кутта
+      </button>
+    </nav>
+
+    <article class="layout" id="mode-mnk">
       
       <div class="col col-left">
       
@@ -67,6 +92,7 @@
             <option value="x[t] = a0 + a1 * sqrt(t)"></option>
             <option value="x[t] = a0 + a1 * x[t-1] + a2 * x[t-2]"></option>
             <option value="x[t] = a0 + a1*x[t-1] + a2*y[t-1]^2"></option>
+            <option value="x[t] = a0 + a1*x[t-1] + a2*y[t-1]"></option>
           </datalist>
 
           <datalist id="models-y">
@@ -75,6 +101,7 @@
             <option value="y[t] = a3 + a4*x[t] + a5*x[t-1]"></option>
             <option value="y[t] = a3 + a4*y[t-1] + a5*x[t]"></option>
             <option value="y[t] = a3 + a4*x[t-1]*y[t-1]"></option>
+            <option value="y[t] = a3 + a4*y[t-1] + a5*x[t-1] + a6*x[t-1]*z[t-1]"></option>
           </datalist>
 
           <datalist id="models-z">
@@ -82,6 +109,7 @@
             <option value="z[t] = a6 + a7*y[t] + a8*x[t]"></option>
             <option value="z[t] = a6 + a7*x[t] + a8*y[t]"></option>
             <option value="z[t] = a6 + a7*z[t-1] + a8*y[t]"></option>
+            <option value="z[t] = a7 + a8*z[t-1] + a9*x[t-1]*y[t-1]"></option>
           </datalist>
         </div>
       </section>
@@ -163,8 +191,139 @@
       -->
     </article>
 
+    <article class="layout hidden" id="mode-rk4">
+      <div class="col col-left">
+        <section class="card" id="rk-system-card">
+          <h3>Дифференциальная модель</h3>
+
+          <div class="form-row">
+            <label class="row-label" for="rk-preset">Готовая модель</label>
+            <select id="rk-preset" class="select-input">
+              <option value="lorenz">Лоренц</option>
+              <option value="rossler">Рёсслер</option>
+              <option value="vanderpol">Осциллятор Ван дер Поля</option>
+              <option value="custom">Своя система</option>
+            </select>
+          </div>
+
+          <div id="rk-param-fields" class="rk-param-fields"></div>
+          <p class="hint" id="rk-formula-note"></p>
+
+          <details class="custom-system" id="rk-custom-system">
+            <summary>Своя система уравнений</summary>
+            <div class="equ-group">
+              <div class="equ-row">
+                <span class="equ-label">dx/dt =</span>
+                <input
+                  type="text"
+                  id="rk-eq-x"
+                  class="equ-input"
+                  placeholder="например, sigma*(y-x)"
+                  spellcheck="false"
+                />
+              </div>
+              <div class="equ-row">
+                <span class="equ-label">dy/dt =</span>
+                <input
+                  type="text"
+                  id="rk-eq-y"
+                  class="equ-input"
+                  placeholder="например, x*(rho-z)-y"
+                  spellcheck="false"
+                />
+              </div>
+              <div class="equ-row">
+                <span class="equ-label">dz/dt =</span>
+                <input
+                  type="text"
+                  id="rk-eq-z"
+                  class="equ-input"
+                  placeholder="например, x*y-beta*z"
+                  spellcheck="false"
+                />
+              </div>
+            </div>
+            <p class="hint">
+              Переменные: x, y, z, t. Можно использовать sin, cos, exp, ln, sqrt, pi и числа.
+            </p>
+          </details>
+        </section>
+
+        <section class="card" id="rk-calc-card">
+          <h3>Параметры расчёта</h3>
+
+          <div class="form-row">
+            <span class="row-label">Начальные условия</span>
+            <label class="rk-small-field">x₀
+              <input type="number" id="rk-x0" class="num-input rk-num" value="1" step="0.1" />
+            </label>
+            <label class="rk-small-field">y₀
+              <input type="number" id="rk-y0" class="num-input rk-num" value="1" step="0.1" />
+            </label>
+            <label class="rk-small-field">z₀
+              <input type="number" id="rk-z0" class="num-input rk-num" value="1" step="0.1" />
+            </label>
+          </div>
+
+          <div class="form-row">
+            <label class="row-label" for="rk-dt">Шаг dt</label>
+            <input type="number" id="rk-dt" class="num-input" value="0.01" min="0.0001" max="1" step="0.001" />
+            <label class="rk-small-label" for="rk-T">Время T</label>
+            <input type="number" id="rk-T" class="num-input" value="40" min="0.01" max="500" step="1" />
+          </div>
+
+          <div class="form-row">
+            <label class="row-label" for="rk-save-name">Имя файла</label>
+            <input
+              type="text"
+              id="rk-save-name"
+              class="text-input"
+              placeholder="rk4-series.txt (пусто — имя автоматически)"
+            />
+          </div>
+
+          <div class="form-row calc-button-group">
+            <button type="button" class="btn btn-primary" id="rk-btn-calc">Рассчитать</button>
+            <button type="button" class="btn" id="rk-btn-save">Сохранить ряд</button>
+          </div>
+
+          <p class="status" id="rk-status"></p>
+          <p class="hint">
+            Ряд сохраняется в формате x: …, y: …, z: … — его можно открыть в режиме
+            «Временные ряды · МНК».
+          </p>
+        </section>
+      </div>
+
+      <div class="col col-right">
+        <section class="card" id="rk-3d-card">
+          <h3>Траектория в фазовом пространстве</h3>
+          <div class="rk-3d-wrap">
+            <canvas id="rk-3d" width="900" height="460"></canvas>
+          </div>
+          <p class="hint">
+            Вращайте мышью, масштаб — колесом, двойной клик — сброс.
+          </p>
+        </section>
+
+        <div class="rk-small-graphs">
+          <section class="card" id="rk-graph-card">
+            <h3>График решения</h3>
+            <div id="rk-graf" class="graf graf-rk"></div>
+          </section>
+
+          <section class="card" id="rk-phase-card">
+            <h3>Фазовый портрет x–y</h3>
+            <div id="rk-phase" class="graf graf-rk graf-phase"></div>
+          </section>
+        </div>
+      </div>
+    </article>
+
     <script src="jquery.js"></script>
     <script src="jquery.flot.js"></script>
+    <script src="rk4.js"></script>
+    <script src="rk3d.js"></script>
     <script src="main.js"></script>
   </body>
 </html>
